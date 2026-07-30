@@ -1,111 +1,223 @@
 import os
+import ssl
 import cv2
+import easyocr
+import re
 import time
-from google import genai
-from google.genai import types
+import numpy as np
 
-# =======================================================
-# [API 세팅] 구글 AI 스튜디오에서 발급받은 API 키를 입력하세요.
-# =======================================================
-GEMINI_API_KEY = "여기에_복사한_키_붙여넣기"
+# [안전장치] 맥북 환경 SSL 다운로드 차단 현상 방지
+ssl._create_default_https_context = ssl._create_unverified_context
 
-# Gemini 클라이언트 초기화
-client = genai.Client(api_key=GEMINI_API_KEY)
+if not os.path.exists('test_samples'):
+    os.makedirs('test_samples')
+
+print("⚙️ [시스템] EasyOCR 모델을 로딩 중입니다...")
+reader = easyocr.Reader(['ko', 'en'], gpu=False)
+print("✅ [시스템] AI 엔진 로드 완료!")
 
 
-def analyze_image_with_gemini(image_path):
+def extract_sugar_with_spatial_filter(valid_results, sugar_idx):
     """
-    [딥러닝 B 최첨단 고도화 로직]
-    로컬 OCR 엔진을 과감히 버리고, 초거대 AI인 Gemini 멀티모달 비전 모델을 활용하여
-    어떤 형태/조명/종류의 영양성분표에서도 '당류 수치'만 정밀 저격해 추출합니다.
+    당류 키워드의 위치를 기준으로 동일한 세로 선상(y축)에 있으면서,
+    동시에 지나치게 멀리 떨어지지 않은(x축 비율 영역 제외) 실제 함량 수치를 추출합니다.
+    """
+    sugar_box, _, sugar_fixed = valid_results[sugar_idx]
+    
+    sugar_x_right = sugar_box[1][0]
+    sugar_y_center = (sugar_box[0][1] + sugar_box[2][1]) / 2
+    sugar_height = sugar_box[2][1] - sugar_box[0][1]
+    
+    y_tolerance = sugar_height * 0.8  # 유연성을 위해 80%로 살짝 조정
+    x_max_distance = sugar_height * 6
+    
+    best_match_num = None
+    
+    for i, (box, original_text, fixed_text) in enumerate(valid_results):
+        if i == sugar_idx:
+            continue
+            
+        current_x_left = box[0][0]
+        current_y_center = (box[0][1] + box[2][1]) / 2
+        
+        if abs(sugar_y_center - current_y_center) <= y_tolerance:
+            x_distance = current_x_left - sugar_x_right
+            
+            if x_distance < -20 or x_distance > x_max_distance:
+                continue
+                
+            match_g = re.search(r'(\d+)\s*(?:g|9|그램)?', fixed_text)
+            if match_g:
+                num_str = match_g.group(1)
+                
+                if len(num_str) >= 2 and fixed_text.endswith('9') and not fixed_text.endswith('g'):
+                    if '9g' not in fixed_text.lower():
+                        num_str = num_str[:-1]
+                
+                if num_str:
+                    best_match_num = f"{int(num_str)}g"
+                    break
+                    
+    if not best_match_num:
+        search_range = range(sugar_idx, min(sugar_idx + 3, len(valid_results)))
+        for idx in search_range:
+            text = valid_results[idx][2]
+            match_pure = re.search(r'\d+', text)
+            if match_pure:
+                best_match_num = f"{int(match_pure.group())}g"
+                break
+                
+    return best_match_num
+
+
+def process_ocr_analysis(image_path, ocr_reader):
+    """
+    이미지를 전처리(확대 및 선명화) 후 분석하여 당류, 비타민A/D, 카페인 수치를 반환합니다.
     """
     start_time = time.time()
     print("\n---------------------------------------------------")
-    print("🚀 [Gemini AI 가동] 구글 클라우드 멀티모달 비전 연산 시작...")
+    print("⏳ [AI 가동] 3대 핵심 성분 분석 시작 (이미지 필터 가동)...")
     print("---------------------------------------------------")
     
-    if not os.path.exists(image_path):
-        print("❌ [에러] 분석할 이미지가 존재하지 않습니다.")
-        return
+    img = cv2.imread(image_path)
+    if img is None:
+        print("❌ [에러] 분석할 이미지를 찾을 수 없습니다.")
+        return None
 
-    try:
-        # 1. 캡처된 사진 파일 읽기
-        with open(image_path, "rb") as f:
-            image_bytes = f.read()
-            
-        image_part = types.Part.from_bytes(
-            data=image_bytes,
-            mime_type="image/jpeg",
-        )
+    # 🔥 [고도화 필터] 글자 뭉개짐 방지를 위한 이미지 전처리
+    # 1. 이미지를 2배 확대하여 글자 간의 간격(0과 g 사이)을 물리적으로 벌려줌
+    resized_img = cv2.resize(img, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
+    
+    # 2. 그레이스케일 변환 및 대비(Contrast) 향상으로 흐릿한 '0'을 선명하게 만듦
+    gray = cv2.cvtColor(resized_img, cv2.COLOR_BGR2GRAY)
+    enhanced = cv2.CLAHE(clipLimit=2.0, tileGridSize=(8,8)).apply(gray)
+    
+    # EasyOCR은 흑백 보정 이미지에서 글자 분리 능력이 극대화됩니다.
+    processed_img = enhanced
 
-        # 2. Gemini에게 던질 정교한 '프롬프트 지시문' 작성 (Zero-shot 정밀 타겟팅)
-        prompt = """
-        너는 음료수 영양성분표 전문 분석 AI 에이전트야.
-        주어진 이미지에서 '당류(Sugars)'의 함량 수치만 찾아서 숫자와 단위(g)만 깔끔하게 답변해줘.
-        
-        [출력 규칙]
-        1. 이미지에 한글이 깨졌거나 흐려도 문맥상 '당류'에 해당하는 값을 사람처럼 유추해서 찾아내야 해.
-        2. 오직 결과값만 출력해줘. 예: 7g, 12g, 0g
-        3. 만약 진짜로 당류를 찾을 수 없다면 '미정'이라고만 답해줘. 다른 군더더기 설명은 절대 하지마.
-        """
+    results = ocr_reader.readtext(
+        processed_img, paragraph=False, decoder='beamsearch', beamWidth=7,
+        allowlist='당류탄수화물단백질지방나트륨비타민카페인영양성분정보기준치0123456789g%mlLADad ,_`탕뉴량규유슈'
+    )
 
-        print("▶ [Gemini] 이미지 패킷 전송 중...")
-        
-        # 3. Gemini 2.5 Flash 모델 호출 (비전 인식 속도가 가장 빠르고 정확함)
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[image_part, prompt]
-        )
-        
-        # 4. 결과값 공백 제거 및 정제
-        result_text = response.text.strip()
-        
-        print("\n================== [Gemini AI 인식 결과] ==================")
-        print(f"🤖 구글 제미나이 응답 원문: {result_text}")
-        print("===========================================================\n")
-        
-        print("================== [성분 매핑 최종 결과] ==================")
-        if "미정" in result_text or not result_text:
-            print("⚠️ Gemini AI가 이미지에서 당류 수치를 특정하지 못했습니다. 다시 촬영해 주세요.")
-        else:
-            print(f"🏆 [범용 당류 포착 성공] -> 최종 당류 수치: {result_text}")
-        print("=======================================================")
+    valid_results = []
+    for res in results:
+        box = res[0]
+        original_text = res[1]
+        fixed_text = res[1].replace(" ", "")
+        valid_results.append((box, original_text, fixed_text))
 
-    except Exception as e:
-        print(f"❌ [Gemini API 에러 발생]: {e}")
-        print("💡 API 키가 정상적으로 입력되었는지, 또는 인터넷 연결을 확인해 주세요.")
+    print("================== [성분 매핑 결과] ==================")
+    
+    sugar_val = "미정"
+    vitamins = []
+    caffeine_val = "0mg 또는 없음"
+
+    sugar_keywords = ['당류', '당뉴', '탕류', '당규', '량류', '당유', '탄수화물당']
+    carbo_keywords = ['탄수화물', '탄수', '탄슈', '탄수화']
+
+    sugar_index = -1
+    for i, (box, original_text, fixed_text) in enumerate(valid_results):
+        if any(k in fixed_text for k in sugar_keywords):
+            sugar_index = i
+            break
+
+    if sugar_index != -1:
+        extracted = extract_sugar_with_spatial_filter(valid_results, sugar_index)
+        if extracted:
+            sugar_val = extracted
+
+    if sugar_val == "미정":
+        carbo_index = -1
+        for i, (box, original_text, fixed_text) in enumerate(valid_results):
+            if any(k in fixed_text for k in carbo_keywords) or '12' in fixed_text:
+                carbo_index = i
+                break
         
+        if carbo_index != -1 and carbo_index + 1 < len(valid_results):
+            extracted = extract_sugar_with_spatial_filter(valid_results, carbo_index + 1)
+            if extracted:
+                sugar_val = extracted
+        
+    if sugar_val == "미정":
+        sugar_val = "미정 (재촬영 필요)"
+
+    for box, original_text, fixed_text in valid_results:
+        if any(k in fixed_text for k in ['비타민', '타민', '비타']):
+            if any(k in fixed_text for k in ['A', 'a', 'D', 'd']):
+                match_num = re.search(r'\d+', fixed_text)
+                vit_num = match_num.group() if match_num else ""
+                vitamins.append(f"{original_text} ({vit_num}mg/μg)" if vit_num else original_text)
+
+        if '카페인' in fixed_text or '카페' in fixed_text:
+            match_caf = re.search(r'\d+', fixed_text)
+            if match_caf:
+                caffeine_val = f"{match_caf.group()}mg"
+
+    print(f"🍬 1. 당류 함량 : {sugar_val}")
+    print(f"💊 2. 비타민 A/D: {', '.join(vitamins) if vitamins else '없음 또는 미검출'}")
+    print(f"☕ 3. 카페인    : {caffeine_val}")
+    print("=======================================================")
     print(f"⚡ [분석 완료] 총 소요 시간: {time.time() - start_time:.2f}초\n")
 
+    return {
+        "sugar": sugar_val,
+        "vitamin": ', '.join(vitamins) if vitamins else "없음",
+        "caffeine": caffeine_val
+    }
 
-def run_camera():
+
+async def run_camera_and_send(front_bot=None):
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        print("❌ 카메라 장치를 열 수 없습니다.")
+        print("카메라를 열 수 없습니다.")
         return
 
-    print("\n=== 📸 Gemini AI 탑재 범용 영양성분표 트래커 ===")
-    print("- Spacebar: 현재 화면 캡처 후 구글 Gemini AI로 당류 즉시 분석")
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+    print("\n=== 📸 camera_track.py 프론트 연동 가이드 버전 가동 ===")
+    print("- 초록색 사각형 가이드 박스 안에 성분표를 맞춰주세요.")
+    print("- Spacebar: 가이드 박스 내부 영역만 캡처 및 프론트 전송")
     print("- Esc: 프로그램 안전 종료")
-    print("==================================================")
+    print("=======================================")
 
     while True:
         ret, frame = cap.read()
-        if not ret: 
-            break
-            
-        cv2.imshow('Webcam', frame)
+        if not ret: break
+        
+        height, width, _ = frame.shape
+        
+        box_w, box_h = 350, 350
+        x = int((width - box_w) / 2)
+        y = int((height - box_h) / 2)
+        
+        display_frame = frame.copy()
+        
+        cv2.rectangle(display_frame, (x, y), (x + box_w, y + box_h), (0, 255, 0), 2)
+        cv2.putText(display_frame, "ALIGN NUTRITION TABLE HERE", (x, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        
+        cv2.imshow('Webcam', display_frame)
         key = cv2.waitKey(1) & 0xFF
 
-        # 스페이스바를 누르면 웹캠 화면을 찍어서 Gemini로 패스!
         if key == 32 or key == ord(' '):
-            filename = "gemini_capture.jpg"
-            cv2.imwrite(filename, frame)
-            print(f"\n[알림] 현재 화면 포착 완료! ('{filename}')")
-            analyze_image_with_gemini(filename)
-
+            filename = "photo.jpg"
+            
+            roi_crop = frame[y:y+box_h, x:x+box_w]
+            cv2.imwrite(filename, roi_crop)
+            
+            result_data = process_ocr_analysis(filename, reader)
+            
+            if result_data and front_bot is not None:
+                sugar_value = result_data["sugar"]
+                print(f"📡 [결합] 프론트 봇에게 당류 수치({sugar_value}) 전송 중...")
+                await front_bot.send_message(sugar_value) 
+                print("✅ [결합] 전송 완료!")
+            else:
+                print("💡 [알림] 프론트 봇 연동 대기 중 (터미널 출력 완료)")
+            
         elif key == 27:
-            print("[알림] 프로그램을 정상 종료합니다.")
             break
 
     cap.release()
@@ -113,4 +225,5 @@ def run_camera():
 
 
 if __name__ == "__main__":
-    run_camera()
+    import asyncio
+    asyncio.run(run_camera_and_send(front_bot=None))
