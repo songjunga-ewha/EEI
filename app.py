@@ -982,12 +982,12 @@ def dashboard():
             context = {}
     except Exception as e:
         context = {}
+
     if "user" not in context or not context["user"]:
-        if saved_user is not None:
-            context["user"] = saved_user
-        else:
-            # saved_user가 None일 때 들어갈 가상 유저 데이터
-            context["user"] = {"name": "게스트"}
+        context["user"] = saved_user if saved_user is not None else {"name": "사용자"}
+
+    if "water_status" not in context or not context["water_status"]:
+        context["water_status"] = {"color": "blue", "text": "정상"}
 
 
     return render_template(
