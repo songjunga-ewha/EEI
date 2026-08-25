@@ -18,6 +18,10 @@ from flask import (
 
 app = Flask(__name__)
 
+# ==========================================
+# 글로벌 데이터 정의
+# ==========================================
+
 saved_user = None
 saved_drinks = []
 
@@ -51,6 +55,10 @@ drink_logs = [
 dashboard_subscribers = []
 dashboard_subscribers_lock = threading.Lock()
 
+
+# ==========================================
+# 헬퍼 / 유틸리티 함수
+# ==========================================
 
 def classify_user_type(diseases):
     if not diseases:
@@ -354,7 +362,6 @@ def save_user_and_drinks(form):
 
 
 def get_dashboard_context():
-    # saved_user가 없을 때 뿜는 에러 방지용 기본값 지정
     user_info = saved_user if saved_user is not None else {
         "name": "사용자",
         "recommended_water": 2000,
@@ -429,7 +436,7 @@ def notify_dashboard_update():
 
 
 # ==========================================
-# 라우팅 영역 (인덱스, 대시보드, 프로필, 로그)
+# 라우팅 영역 (웹 페이지)
 # ==========================================
 
 @app.route("/", methods=["GET", "POST"])
@@ -467,6 +474,7 @@ def dashboard():
 
     return render_template("dashboard.html", **context)
 
+
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
     if request.method == "POST":
@@ -474,13 +482,34 @@ def profile():
         notify_dashboard_update()
         return redirect(url_for("dashboard"))
 
-    user_info = saved_user if saved_user is not None else {"name": "사용자"}
-    return render_template("profile.html", user=user_info, drinks=saved_drinks)
+    user_info = saved_user if saved_user is not None else {
+        "name": "사용자",
+        "age": "20",
+        "weight": 60,
+        "diseases": [],
+        "user_type": "일반 사용자",
+        "recommended_water": 2000
+    }
+    drinks_info = saved_drinks if saved_drinks else []
+
+    return render_template("profile.html", user=user_info, drinks=drinks_info)
 
 
 @app.route("/logs")
 def logs_page():
-    context = get_dashboard_context()
+    try:
+        context = get_dashboard_context()
+        if not isinstance(context, dict):
+            context = {}
+    except Exception:
+        context = {}
+
+    if "user" not in context or not context["user"]:
+        context["user"] = saved_user if saved_user is not None else {"name": "사용자"}
+
+    if "reversed_logs" not in context:
+        context["reversed_logs"] = get_reversed_logs_with_index()
+
     return render_template("logs.html", **context)
 
 
@@ -702,3 +731,4 @@ def api_dashboard_events():
         },
     )
 
+    
