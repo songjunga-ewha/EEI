@@ -978,8 +978,16 @@ def dashboard():
     ##    )
     try:
         context = get_dashboard_context()
+        if not isinstance(context, dict):
+            context = {}
     except Exception as e:
         context = {}
+    if "user" not in context or not context["user"]:
+        if saved_user is not None:
+            context["user"] = saved_user
+        else:
+            # saved_user가 None일 때 들어갈 가상 유저 데이터
+            context["user"] = {"name": "게스트"}
 
 
     return render_template(
