@@ -976,9 +976,10 @@ def dashboard():
     ##    return redirect(
     ##        url_for("index")
     ##    )
-
-
-    context = get_dashboard_context()
+    try:
+        context = get_dashboard_context()
+    except Exception as e:
+        context = {}
 
 
     return render_template(
