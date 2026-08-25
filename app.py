@@ -445,9 +445,27 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    context = get_dashboard_context()
-    return render_template("dashboard.html", **context)
+    try:
+        context = get_dashboard_context()
+        if not isinstance(context, dict):
+            context = {}
+    except Exception:
+        context = {}
 
+    if "user" not in context or not context["user"]:
+        context["user"] = saved_user if saved_user is not None else {"name": "사용자", "recommended_water": 2000}
+
+    if "water_status" not in context or not context["water_status"]:
+        context["water_status"] = {"color": "success", "text": "양호", "message": "음수 습관을 유지하고 있어요."}
+
+    if "drink_type" not in context or not context["drink_type"]:
+        context["drink_type"] = {
+            "emoji": "💧",
+            "name": "물먹는 하마형",
+            "description": "아직 기록된 데이터가 충분하지 않거나 분석 중입니다."
+        }
+
+    return render_template("dashboard.html", **context)
 
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
@@ -684,4 +702,3 @@ def api_dashboard_events():
         },
     )
 
-    
