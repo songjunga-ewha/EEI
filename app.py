@@ -440,6 +440,7 @@ def notify_dashboard_update():
 # ==========================================
 
 @app.route("/", methods=["GET", "POST"])
+@app.route("/index", methods=["GET", "POST"])
 def index():
     global saved_user
 
@@ -710,7 +711,6 @@ def api_dashboard_events():
             connected_message = {"type": "connected"}
             yield "data: " + json.dumps(connected_message, ensure_ascii=False) + "\n\n"
 
-            # Gunicorn 타임아웃(30초)에 걸리지 않도록 최대 5초만 대기 후 종료
             try:
                 event = subscriber.get(timeout=5)
                 yield "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
@@ -731,3 +731,4 @@ def api_dashboard_events():
         },
     )
 
+    
