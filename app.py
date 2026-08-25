@@ -19,11 +19,30 @@ from flask import (
 app = Flask(__name__)
 
 # ==========================================
-# 글로벌 데이터 정의
+# 글로벌 데이터 정의 (메모리 저장소)
 # ==========================================
 
-saved_user = None
-saved_drinks = []
+saved_user = {
+    "name": "사용자",
+    "age": "20",
+    "weight": 60,
+    "diseases": [],
+    "user_type": "일반 사용자",
+    "recommended_water": 2000,
+    "caffeine_limit": 300,
+    "sugar_limit": 50,
+    "vitamin_goal": 100,
+}
+
+saved_drinks = [
+    {
+        "name": "비타민워터",
+        "total_volume": 500,
+        "total_caffeine": 0,
+        "total_sugar": 18,
+        "total_vitamin": 80,
+    }
+]
 
 drink_logs = [
     {
@@ -46,7 +65,7 @@ drink_logs = [
         "caffeine": 35,
         "sugar": 4.2,
         "vitamin": 0,
-        "drink_ratio": 70,
+        "drink_ratio": 70.0,
         "source": "즐겨찾기 버튼 + 로드셀 측정",
         "status": "비율 계산 반영",
     },
@@ -350,8 +369,8 @@ def save_user_and_drinks(form):
 
     saved_user = {
         "name": name if name else "사용자",
-        "age": age,
-        "weight": weight,
+        "age": age if age else "20",
+        "weight": weight if weight > 0 else 60,
         "diseases": diseases,
         "user_type": user_type,
         "recommended_water": recommended_water,
@@ -364,6 +383,10 @@ def save_user_and_drinks(form):
 def get_dashboard_context():
     user_info = saved_user if saved_user is not None else {
         "name": "사용자",
+        "age": "20",
+        "weight": 60,
+        "diseases": [],
+        "user_type": "일반 사용자",
         "recommended_water": 2000,
         "caffeine_limit": 300,
         "sugar_limit": 50,
@@ -442,8 +465,6 @@ def notify_dashboard_update():
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
 def index():
-    global saved_user
-
     if request.method == "POST":
         save_user_and_drinks(request.form)
         return redirect(url_for("dashboard"))
@@ -453,26 +474,7 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    try:
-        context = get_dashboard_context()
-        if not isinstance(context, dict):
-            context = {}
-    except Exception:
-        context = {}
-
-    if "user" not in context or not context["user"]:
-        context["user"] = saved_user if saved_user is not None else {"name": "사용자", "recommended_water": 2000}
-
-    if "water_status" not in context or not context["water_status"]:
-        context["water_status"] = {"color": "success", "text": "양호", "message": "음수 습관을 유지하고 있어요."}
-
-    if "drink_type" not in context or not context["drink_type"]:
-        context["drink_type"] = {
-            "emoji": "💧",
-            "name": "물먹는 하마형",
-            "description": "아직 기록된 데이터가 충분하지 않거나 분석 중입니다."
-        }
-
+    context = get_dashboard_context()
     return render_template("dashboard.html", **context)
 
 
@@ -491,26 +493,13 @@ def profile():
         "user_type": "일반 사용자",
         "recommended_water": 2000
     }
-    drinks_info = saved_drinks if saved_drinks else []
 
-    return render_template("profile.html", user=user_info, drinks=drinks_info)
+    return render_template("profile.html", user=user_info, drinks=saved_drinks)
 
 
 @app.route("/logs")
 def logs_page():
-    try:
-        context = get_dashboard_context()
-        if not isinstance(context, dict):
-            context = {}
-    except Exception:
-        context = {}
-
-    if "user" not in context or not context["user"]:
-        context["user"] = saved_user if saved_user is not None else {"name": "사용자"}
-
-    if "reversed_logs" not in context:
-        context["reversed_logs"] = get_reversed_logs_with_index()
-
+    context = get_dashboard_context()
     return render_template("logs.html", **context)
 
 
@@ -540,7 +529,7 @@ def add_favorite(drink_index):
             "sugar": calculated["sugar"],
             "vitamin": calculated["vitamin"],
             "drink_ratio": calculated["ratio"],
-            "source": "즐겨찾기 버튼 + 로드셀 Mock",
+            "source": "즐겨찾기 버튼 + 로드셀 측정",
             "status": "비율 계산 반영",
         }
 
@@ -558,8 +547,6 @@ def add_mock_data():
         {"drink": "라떼", "total_volume": 370, "total_caffeine": 130, "total_sugar": 18, "total_vitamin": 5, "source": "OCR Mock + 로드셀 Mock", "status": "당류 확인"},
         {"drink": "비타민워터", "total_volume": 500, "total_caffeine": 0, "total_sugar": 18, "total_vitamin": 80, "source": "OCR Mock + 로드셀 Mock", "status": "비타민 확인"},
         {"drink": "이온음료", "total_volume": 250, "total_caffeine": 0, "total_sugar": 18, "total_vitamin": 10, "source": "OCR Mock + 로드셀 Mock", "status": "당류 확인"},
-        {"drink": "제로콜라", "total_volume": 355, "total_caffeine": 35, "total_sugar": 0, "total_vitamin": 0, "source": "OCR Mock + 로드셀 Mock", "status": "정상"},
-        {"drink": "녹차", "total_volume": 300, "total_caffeine": 45, "total_sugar": 0, "total_vitamin": 12, "source": "OCR Mock + 로드셀 Mock", "status": "정상"},
     ]
 
     selected_drink = random.choice(mock_drinks)
@@ -684,9 +671,6 @@ def api_dashboard_data():
 
 @app.route("/api/user_settings", methods=["GET"])
 def api_user_settings():
-    if saved_user is None:
-        return jsonify({"ok": False, "error": "사용자 설정이 아직 저장되지 않았습니다."}), 400
-
     return jsonify({
         "ok": True,
         "name": saved_user["name"],

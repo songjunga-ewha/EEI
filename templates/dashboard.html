@@ -664,31 +664,11 @@
 
 
     <script>
-        function showMonthlyDetail(
-            day,
-            amount,
-            rate,
-            status
-        ) {
-            document.getElementById(
-                "detail-day"
-            ).textContent =
-                day + "일 기록";
-
-            document.getElementById(
-                "detail-amount"
-            ).textContent =
-                amount + "ml";
-
-            document.getElementById(
-                "detail-rate"
-            ).textContent =
-                rate + "%";
-
-            document.getElementById(
-                "detail-status"
-            ).textContent =
-                status;
+        function showMonthlyDetail(day, amount, rate, status) {
+            document.getElementById("detail-day").textContent = day + "일 기록";
+            document.getElementById("detail-amount").textContent = amount + "ml";
+            document.getElementById("detail-rate").textContent = rate + "%";
+            document.getElementById("detail-status").textContent = status;
         }
     </script>
 
