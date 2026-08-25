@@ -970,10 +970,12 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    if saved_user is None:
-        return redirect(
-            url_for("index")
-        )
+    ##saved_user = "test_user"
+    
+    ##if saved_user is None:
+    ##    return redirect(
+    ##        url_for("index")
+    ##    )
 
 
     context = get_dashboard_context()
