@@ -710,12 +710,12 @@ def api_dashboard_events():
             connected_message = {"type": "connected"}
             yield "data: " + json.dumps(connected_message, ensure_ascii=False) + "\n\n"
 
-            while True:
-                try:
-                    event = subscriber.get(timeout=25)
-                    yield "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
-                except queue.Empty:
-                    yield ": keep-alive\n\n"
+            # Gunicorn 타임아웃(30초)에 걸리지 않도록 최대 5초만 대기 후 종료
+            try:
+                event = subscriber.get(timeout=5)
+                yield "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
+            except queue.Empty:
+                yield "data: " + json.dumps({"type": "heartbeat"}, ensure_ascii=False) + "\n\n"
         finally:
             with dashboard_subscribers_lock:
                 if subscriber in dashboard_subscribers:
@@ -731,4 +731,3 @@ def api_dashboard_events():
         },
     )
 
-    
