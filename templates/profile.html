@@ -1,185 +1,228 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>잘마시조 마이페이지</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+   <meta charset="UTF-8">
+   <title>잘마시조 마이페이지</title>
+   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
+
 <body class="mobile-body">
-    <div class="mobile-app">
-        <header class="simple-header">
-            <a href="/dashboard" class="back-btn">← 뒤로</a>
-            <h1>마이페이지</h1>
-        </header>
+   <div class="mobile-app">
+       <header class="simple-header">
+           <a href="/dashboard" class="back-btn">← 뒤로</a>
+           <h1>마이페이지</h1>
+       </header>
 
-        <form method="POST" class="form-box">
-            <section class="mobile-card">
-                <h2>1. 사용자 기본 정보</h2>
 
-                <label>이름</label>
-                <input type="text" name="name" value="{{ user.name }}" required>
+       <form method="POST" class="form-box">
+           <section class="mobile-card">
+               <h2>1. 사용자 기본 정보</h2>
 
-                <label>나이</label>
-                <input type="number" name="age" value="{{ user.age }}" required>
 
-                <label>체중(kg)</label>
-                <input type="number" step="0.1" name="weight" value="{{ user.weight }}" required>
+               <label>이름</label>
+               <input type="text" name="name" value="{{ user.name }}" required>
 
-                <p class="hint">
-                    저장하면 권장 음수량이 다시 계산됩니다.
-                </p>
-            </section>
 
-            <section class="mobile-card">
-                <h2>2. 사용자 타입</h2>
+               <label>나이</label>
+               <input type="number" name="age" value="{{ user.age }}" required>
 
-                <label class="check">
-                    <input type="checkbox" name="disease" value="diabetes"
-                    {% if "diabetes" in user.diseases %}checked{% endif %}>
-                    당뇨 / 당류 섭취 주의
-                </label>
 
-                <label class="check">
-                    <input type="checkbox" name="disease" value="hyperlipidemia"
-                    {% if "hyperlipidemia" in user.diseases %}checked{% endif %}>
-                    고지혈증 / 당류·지방 섭취 주의
-                </label>
+               <label>체중(kg)</label>
+               <input type="number" step="0.1" name="weight" value="{{ user.weight }}" required>
 
-                <label class="check">
-                    <input type="checkbox" name="disease" value="cirrhosis"
-                    {% if "cirrhosis" in user.diseases %}checked{% endif %}>
-                    간경화 / 카페인·당류 섭취 주의
-                </label>
 
-                <label class="check">
-                    <input type="checkbox" name="disease" value="heart_failure"
-                    {% if "heart_failure" in user.diseases %}checked{% endif %}>
-                    심부전 / 수분 섭취량 조절 주의
-                </label>
-            </section>
+               <p class="hint">
+                   저장하면 권장 음수량이 다시 계산됩니다.
+               </p>
+           </section>
 
-            <section class="mobile-card">
-                <h2>3. 자주 마시는 음료</h2>
-                <p class="hint">
-                    전체 용량과 전체 성분을 입력하면, 실제 마신 양에 비례해 기록됩니다.
-                </p>
 
-                <div id="drink-list">
-                    {% if drinks %}
-                        {% for drink in drinks %}
-                        <div class="drink-item">
-                            <div class="drink-title-row">
-                                <h3>음료 {{ loop.index }}</h3>
-                                <button type="button" class="delete-button" onclick="removeDrink(this)">삭제</button>
-                            </div>
+           <section class="mobile-card">
+               <h2>2. 사용자 타입</h2>
 
-                            <label>음료 이름</label>
-                            <input type="text" name="drink_name" value="{{ drink.name }}">
 
-                            <label>전체 용량(ml)</label>
-                            <input type="number" name="drink_amount" value="{{ drink.total_volume }}">
+               <label class="check">
+                   <input type="checkbox" name="disease" value="diabetes"
+                   {% if "diabetes" in user.diseases %}checked{% endif %}>
+                   당뇨 / 당류 섭취 주의
+               </label>
 
-                            <label>전체 카페인(mg)</label>
-                            <input type="number" name="drink_caffeine" value="{{ drink.total_caffeine }}">
 
-                            <label>전체 당류(g)</label>
-                            <input type="number" name="drink_sugar" value="{{ drink.total_sugar }}">
+               <label class="check">
+                   <input type="checkbox" name="disease" value="hyperlipidemia"
+                   {% if "hyperlipidemia" in user.diseases %}checked{% endif %}>
+                   고지혈증 / 당류·지방 섭취 주의
+               </label>
 
-                            <label>전체 비타민(mg)</label>
-                            <input type="number" name="drink_vitamin" value="{{ drink.total_vitamin }}">
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="drink-item">
-                            <div class="drink-title-row">
-                                <h3>음료 1</h3>
-                                <button type="button" class="delete-button" onclick="removeDrink(this)">삭제</button>
-                            </div>
 
-                            <label>음료 이름</label>
-                            <input type="text" name="drink_name" placeholder="예: 비타민워터">
+               <label class="check">
+                   <input type="checkbox" name="disease" value="cirrhosis"
+                   {% if "cirrhosis" in user.diseases %}checked{% endif %}>
+                   간경화 / 카페인·당류 섭취 주의
+               </label>
 
-                            <label>전체 용량(ml)</label>
-                            <input type="number" name="drink_amount" placeholder="예: 500">
 
-                            <label>전체 카페인(mg)</label>
-                            <input type="number" name="drink_caffeine" placeholder="예: 0">
+               <label class="check">
+                   <input type="checkbox" name="disease" value="heart_failure"
+                   {% if "heart_failure" in user.diseases %}checked{% endif %}>
+                   심부전 / 수분 섭취량 조절 주의
+               </label>
+           </section>
 
-                            <label>전체 당류(g)</label>
-                            <input type="number" name="drink_sugar" placeholder="예: 18">
 
-                            <label>전체 비타민(mg)</label>
-                            <input type="number" name="drink_vitamin" placeholder="예: 80">
-                        </div>
-                    {% endif %}
-                </div>
+           <section class="mobile-card">
+               <h2>3. 자주 마시는 음료</h2>
+               <p class="hint">
+                   전체 용량과 전체 성분을 입력하면, 실제 마신 양에 비례해 기록됩니다.
+               </p>
 
-                <button type="button" class="sub-button" onclick="addDrink()">+ 음료 추가하기</button>
-            </section>
 
-            <button class="main-submit" type="submit">수정 내용 저장하기</button>
-        </form>
-    </div>
+               <div id="drink-list">
+                   {% if drinks %}
+                       {% for drink in drinks %}
+                       <div class="drink-item">
+                           <div class="drink-title-row">
+                               <h3>음료 {{ loop.index }}</h3>
+                               <button type="button" class="delete-button" onclick="removeDrink(this)">삭제</button>
+                           </div>
 
-    <script>
-        function addDrink() {
-            const drinkList = document.getElementById("drink-list");
-            const currentCount = drinkList.querySelectorAll(".drink-item").length;
-            const nextNumber = currentCount + 1;
 
-            const newDrink = document.createElement("div");
-            newDrink.className = "drink-item";
+                           <label>음료 이름</label>
+                           <input type="text" name="drink_name" value="{{ drink.name }}">
 
-            newDrink.innerHTML = `
-                <div class="drink-title-row">
-                    <h3>음료 ${nextNumber}</h3>
-                    <button type="button" class="delete-button" onclick="removeDrink(this)">삭제</button>
-                </div>
 
-                <label>음료 이름</label>
-                <input type="text" name="drink_name" placeholder="예: 카페라떼">
+                           <label>전체 용량(ml)</label>
+                           <input type="number" name="drink_amount" value="{{ drink.total_volume }}">
 
-                <label>전체 용량(ml)</label>
-                <input type="number" name="drink_amount" placeholder="예: 250">
 
-                <label>전체 카페인(mg)</label>
-                <input type="number" name="drink_caffeine" placeholder="예: 100">
+                           <label>전체 카페인(mg)</label>
+                           <input type="number" name="drink_caffeine" value="{{ drink.total_caffeine }}">
 
-                <label>전체 당류(g)</label>
-                <input type="number" name="drink_sugar" placeholder="예: 12">
 
-                <label>전체 비타민(mg)</label>
-                <input type="number" name="drink_vitamin" placeholder="예: 5">
-            `;
+                           <label>전체 당류(g)</label>
+                           <input type="number" name="drink_sugar" value="{{ drink.total_sugar }}">
 
-            drinkList.appendChild(newDrink);
-            updateDrinkNumbers();
-        }
 
-        function removeDrink(button) {
-            const drinkList = document.getElementById("drink-list");
-            const drinkItems = drinkList.querySelectorAll(".drink-item");
+                           <label>전체 비타민(mg)</label>
+                           <input type="number" name="drink_vitamin" value="{{ drink.total_vitamin }}">
+                       </div>
+                       {% endfor %}
+                   {% else %}
+                       <div class="drink-item">
+                           <div class="drink-title-row">
+                               <h3>음료 1</h3>
+                               <button type="button" class="delete-button" onclick="removeDrink(this)">삭제</button>
+                           </div>
 
-            if (drinkItems.length === 1) {
-                alert("최소 1개의 음료 입력칸은 필요합니다.");
-                return;
-            }
 
-            const drinkItem = button.closest(".drink-item");
-            drinkItem.remove();
+                           <label>음료 이름</label>
+                           <input type="text" name="drink_name" placeholder="예: 비타민워터">
 
-            updateDrinkNumbers();
-        }
 
-        function updateDrinkNumbers() {
-            const drinkItems = document.querySelectorAll(".drink-item");
+                           <label>전체 용량(ml)</label>
+                           <input type="number" name="drink_amount" placeholder="예: 500">
 
-            drinkItems.forEach((item, index) => {
-                const title = item.querySelector("h3");
-                title.textContent = `음료 ${index + 1}`;
-            });
-        }
-    </script>
+
+                           <label>전체 카페인(mg)</label>
+                           <input type="number" name="drink_caffeine" placeholder="예: 0">
+
+
+                           <label>전체 당류(g)</label>
+                           <input type="number" name="drink_sugar" placeholder="예: 18">
+
+
+                           <label>전체 비타민(mg)</label>
+                           <input type="number" name="drink_vitamin" placeholder="예: 80">
+                       </div>
+                   {% endif %}
+               </div>
+
+
+               <button type="button" class="sub-button" onclick="addDrink()">+ 음료 추가하기</button>
+           </section>
+
+
+           <button class="main-submit" type="submit">수정 내용 저장하기</button>
+       </form>
+   </div>
+
+
+   <script>
+       function addDrink() {
+           const drinkList = document.getElementById("drink-list");
+           const currentCount = drinkList.querySelectorAll(".drink-item").length;
+           const nextNumber = currentCount + 1;
+
+
+           const newDrink = document.createElement("div");
+           newDrink.className = "drink-item";
+
+
+           newDrink.innerHTML = `
+               <div class="drink-title-row">
+                   <h3>음료 ${nextNumber}</h3>
+                   <button type="button" class="delete-button" onclick="removeDrink(this)">삭제</button>
+               </div>
+
+
+               <label>음료 이름</label>
+               <input type="text" name="drink_name" placeholder="예: 카페라떼">
+
+
+               <label>전체 용량(ml)</label>
+               <input type="number" name="drink_amount" placeholder="예: 250">
+
+
+               <label>전체 카페인(mg)</label>
+               <input type="number" name="drink_caffeine" placeholder="예: 100">
+
+
+               <label>전체 당류(g)</label>
+               <input type="number" name="drink_sugar" placeholder="예: 12">
+
+
+               <label>전체 비타민(mg)</label>
+               <input type="number" name="drink_vitamin" placeholder="예: 5">
+           `;
+
+
+           drinkList.appendChild(newDrink);
+           updateDrinkNumbers();
+       }
+
+
+       function removeDrink(button) {
+           const drinkList = document.getElementById("drink-list");
+           const drinkItems = drinkList.querySelectorAll(".drink-item");
+
+
+           if (drinkItems.length === 1) {
+               alert("최소 1개의 음료 입력칸은 필요합니다.");
+               return;
+           }
+
+
+           const drinkItem = button.closest(".drink-item");
+           drinkItem.remove();
+
+
+           updateDrinkNumbers();
+       }
+
+
+       function updateDrinkNumbers() {
+           const drinkItems = document.querySelectorAll(".drink-item");
+
+
+           drinkItems.forEach((item, index) => {
+               const title = item.querySelector("h3");
+               title.textContent = `음료 ${index + 1}`;
+           });
+       }
+   </script>
 </body>
 </html>
+
+
+

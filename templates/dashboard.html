@@ -2,18 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>잘마시조 대시보드</title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}?v=1.0"
-    >
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2.0">
 </head>
 
 <body class="mobile-body">
@@ -22,10 +13,8 @@
         <header class="app-header">
             <div>
                 <h1>💧 잘마시조</h1>
-
                 <p class="hello-text">
-                    안녕하세요,
-                    {{ user.name }}님 👋
+                    안녕하세요, {{ user.name }}님 👋
                 </p>
 
                 <p class="sub-text">
@@ -33,40 +22,22 @@
                 </p>
             </div>
 
-            <a
-                href="/profile"
-                class="profile-chip"
-            >
+            <a href="/profile" class="profile-chip">
                 내 정보
             </a>
         </header>
 
 
         <section class="ring-section">
-
-            <div
-                id="water-progress-ring"
-                class="progress-ring"
-                style="--progress: {{ water_rate_display }};"
-            >
+            <div id="water-progress-ring" class="progress-ring" style="--progress: {{ water_rate_display }};">
                 <div class="progress-ring-inner">
-
-                    <p
-                        id="water-rate"
-                        class="ring-percent"
-                    >
+                    <p id="water-rate" class="ring-percent">
                         {{ water_rate }}%
                     </p>
 
-                    <p
-                        id="water-summary"
-                        class="ring-sub"
-                    >
-                        {{ total_water }}
-                        /
-                        {{ user.recommended_water }} ml
+                    <p id="water-summary" class="ring-sub">
+                        {{ total_water }} / {{ user.recommended_water }} ml
                     </p>
-
                 </div>
             </div>
 
@@ -74,1094 +45,408 @@
                 오늘 음수 달성률
             </p>
 
-            <p
-                id="water-feedback"
-                class="ring-feedback {{ water_status.color }}"
-            >
+            <p id="water-feedback" class="ring-feedback {{ water_status.color }}">
                 {{ water_status.message }}
             </p>
-
         </section>
 
 
         <section class="stat-grid">
-
             <div class="stat-card">
-                <p class="stat-icon">
-                    💧
-                </p>
-
-                <p class="stat-title">
-                    오늘 음수량
-                </p>
-
-                <p
-                    id="total-water"
-                    class="stat-value"
-                >
+                <p class="stat-icon">💧</p>
+                <p class="stat-title">오늘 음수량</p>
+                <p id="total-water" class="stat-value">
                     {{ total_water }} ml
                 </p>
             </div>
 
-
             <div class="stat-card">
-                <p class="stat-icon">
-                    ☕
-                </p>
-
-                <p class="stat-title">
-                    카페인
-                </p>
-
-                <p
-                    id="total-caffeine"
-                    class="stat-value"
-                >
+                <p class="stat-icon">☕</p>
+                <p class="stat-title">카페인</p>
+                <p id="total-caffeine" class="stat-value">
                     {{ total_caffeine }} mg
                 </p>
 
-                <p
-                    id="caffeine-status"
-                    class="mini-status {{ caffeine_status }}"
-                >
+                <p id="caffeine-status" class="mini-status {{ caffeine_status }}">
                     {% if caffeine_status == "success" %}
                         😊 적정
-
                     {% elif caffeine_status == "warning" %}
                         😐 주의
-
                     {% else %}
                         ⚠ 높음
                     {% endif %}
                 </p>
             </div>
 
-
             <div class="stat-card">
-                <p class="stat-icon">
-                    🍬
-                </p>
-
-                <p class="stat-title">
-                    당류
-                </p>
-
-                <p
-                    id="total-sugar"
-                    class="stat-value"
-                >
+                <p class="stat-icon">🍬</p>
+                <p class="stat-title">당류</p>
+                <p id="total-sugar" class="stat-value">
                     {{ total_sugar }} g
                 </p>
 
-                <p
-                    id="sugar-status"
-                    class="mini-status {{ sugar_status }}"
-                >
+                <p id="sugar-status" class="mini-status {{ sugar_status }}">
                     {% if sugar_status == "success" %}
                         😊 적정
-
                     {% elif sugar_status == "warning" %}
                         😐 주의
-
                     {% else %}
                         ⚠ 높음
                     {% endif %}
                 </p>
             </div>
 
-
             <div class="stat-card">
-                <p class="stat-icon">
-                    🍋
-                </p>
-
-                <p class="stat-title">
-                    비타민
-                </p>
-
-                <p
-                    id="total-vitamin"
-                    class="stat-value"
-                >
+                <p class="stat-icon">🍋</p>
+                <p class="stat-title">비타민</p>
+                <p id="total-vitamin" class="stat-value">
                     {{ total_vitamin }} mg
                 </p>
 
-                <p
-                    id="vitamin-status"
-                    class="mini-status {{ vitamin_status }}"
-                >
+                <p id="vitamin-status" class="mini-status {{ vitamin_status }}">
                     {% if vitamin_status == "success" %}
                         😊 충분
-
                     {% elif vitamin_status == "warning" %}
                         😐 보통
-
                     {% else %}
                         ⚠ 낮음
                     {% endif %}
                 </p>
             </div>
-
         </section>
 
 
         <section class="mobile-card profile-summary-card">
-
-            <a
-                href="/profile"
-                class="profile-card-link"
-            >
+            <a href="/profile" class="profile-card-link">
                 <div>
-                    <h2>
-                        내 프로필
-                    </h2>
-
-                    <p>
-                        {{ user.user_type }}
-                    </p>
-
+                    <h2>내 프로필</h2>
+                    <p>{{ user.user_type }}</p>
                     <span>
-                        권장 음수량
-                        {{ user.recommended_water }}ml
-                        · 등록 음료
-                        {{ drinks|length }}개
+                        권장 음수량 {{ user.recommended_water }}ml · 등록 음료 {{ drinks|length }}개
                     </span>
                 </div>
-
-                <strong>
-                    ›
-                </strong>
+                <strong>›</strong>
             </a>
-
-        </section>
-
-
-        <section class="mobile-card mock-test-card">
-
-            <h2>
-                Mock Data 테스트
-            </h2>
-
-            <p class="hint">
-                실제 라즈베리파이 연결 전에는
-                임시 음수 기록을 추가하여
-                화면 갱신을 확인할 수 있습니다.
-            </p>
-
-            <form
-                action="/add_mock_data"
-                method="POST"
-            >
-                <button
-                    class="mock-button"
-                    type="submit"
-                >
-                    + 가짜 음수 기록 추가
-                </button>
-            </form>
-
         </section>
 
 
         <section class="mobile-card">
-
             <div class="section-row">
-                <h2>
-                    자주 마시는 음료
-                </h2>
-
-                <a
-                    href="/profile"
-                    class="text-link"
-                >
-                    수정
-                </a>
+                <h2>자주 마시는 음료</h2>
+                <a href="/profile" class="text-link">수정</a>
             </div>
 
             {% if drinks %}
-
                 <div class="fav-drink-list">
-
                     {% for drink in drinks %}
-
-                        <form
-                            action="/add_favorite/{{ loop.index0 }}"
-                            method="POST"
-                        >
-                            <button
-                                class="fav-drink-btn"
-                                type="submit"
-                            >
-                                <strong>
-                                    {{ drink.name }}
-                                </strong>
-
-                                <span>
-                                    전체
-                                    {{ drink.total_volume }}ml
-                                    · 카페인
-                                    {{ drink.total_caffeine }}mg
-                                    · 당류
-                                    {{ drink.total_sugar }}g
-                                    · 비타민
-                                    {{ drink.total_vitamin }}mg
-                                </span>
-                            </button>
-                        </form>
-
+                        <div class="fav-drink-btn">
+                            <strong>{{ drink.name }}</strong>
+                            <span>
+                                전체 {{ drink.total_volume }}ml · 카페인 {{ drink.total_caffeine }}mg · 당류 {{ drink.total_sugar }}g · 비타민 {{ drink.total_vitamin }}mg
+                            </span>
+                        </div>
                     {% endfor %}
-
                 </div>
-
             {% else %}
-
                 <p class="empty-text">
-                    등록된 음료가 없습니다.
-                    마이페이지에서 추가할 수 있습니다.
+                    등록된 음료가 없습니다. 마이페이지에서 추가할 수 있습니다.
                 </p>
-
             {% endif %}
-
         </section>
 
 
         <section class="mobile-card">
-
             <div class="section-row">
-                <h2>
-                    최근 기록
-                </h2>
-
-                <a
-                    href="/logs"
-                    class="text-link"
-                >
-                    전체 보기
-                </a>
+                <h2>최근 기록</h2>
+                <a href="/logs" class="text-link">전체 보기</a>
             </div>
 
             <div id="recent-log-list">
-
                 {% if reversed_logs %}
-
                     {% for log in reversed_logs[:3] %}
-
                         <div class="preview-log-card">
                             <div>
-                                <strong>
-                                    {{ log.drink }}
-                                </strong>
-
+                                <strong>{{ log.drink }}</strong>
                                 <p>
-                                    {{ log.time }}
-                                    ·
-                                    {{ log.consumed_amount }}ml
-                                    ·
-                                    {{ log.drink_ratio }}%
+                                    {{ log.time }} · {{ log.consumed_amount }}ml · {{ log.drink_ratio }}%
                                 </p>
                             </div>
 
                             <div class="preview-log-right">
-                                <p>
-                                    ☕
-                                    {{ log.caffeine }}mg
-                                </p>
-
-                                <p>
-                                    🍬
-                                    {{ log.sugar }}g
-                                </p>
-
-                                <p>
-                                    🍋
-                                    {{ log.vitamin }}mg
-                                </p>
+                                <p>☕ {{ log.caffeine }}mg</p>
+                                <p>🍬 {{ log.sugar }}g</p>
+                                <p>🍋 {{ log.vitamin }}mg</p>
                             </div>
                         </div>
-
                     {% endfor %}
-
                 {% else %}
-
-                    <p class="empty-text">
-                        아직 기록이 없습니다.
-                    </p>
-
+                    <p class="empty-text">아직 기록이 없습니다.</p>
                 {% endif %}
-
             </div>
-
         </section>
 
 
         <section class="mobile-card drink-type-card">
-
             <div class="section-row">
-                <h2>
-                    나의 음수 유형
-                </h2>
-
-                <span class="type-caption">
-                    오늘의 패턴
-                </span>
+                <h2>나의 음수 유형</h2>
+                <span class="type-caption">오늘의 패턴</span>
             </div>
 
             <div class="drink-type-content">
-
-                <div
-                    id="drink-type-emoji"
-                    class="drink-type-emoji"
-                >
+                <div id="drink-type-emoji" class="drink-type-emoji">
                     {{ drink_type.emoji }}
                 </div>
-
                 <div>
-                    <h3 id="drink-type-name">
-                        {{ drink_type.name }}
-                    </h3>
-
-                    <p id="drink-type-description">
-                        {{ drink_type.description }}
-                    </p>
+                    <h3 id="drink-type-name">{{ drink_type.name }}</h3>
+                    <p id="drink-type-description">{{ drink_type.description }}</p>
                 </div>
-
             </div>
-
         </section>
 
 
         <section class="mobile-card ranking-summary-section">
-
             <div class="section-row">
-                <h2>
-                    음료 랭킹 TOP 3
-                </h2>
-
-                <span class="ranking-caption">
-                    자주 기록된 음료
-                </span>
+                <h2>음료 랭킹 TOP 3</h2>
+                <span class="ranking-caption">자주 기록된 음료</span>
             </div>
 
             <div id="ranking-list">
-
                 {% if ranking %}
-
                     {% for name, count in ranking[:3] %}
-
-                        <div
-                            class="
-                                ranking-card
-
-                                {% if loop.index == 1 %}
-                                    first
-
-                                {% elif loop.index == 2 %}
-                                    second
-
-                                {% elif loop.index == 3 %}
-                                    third
-                                {% endif %}
-                            "
-                        >
+                        <div class="ranking-card {% if loop.index == 1 %}first{% elif loop.index == 2 %}second{% elif loop.index == 3 %}third{% endif %}">
                             <div class="rank-left">
-
                                 <div class="rank-badge">
-                                    {% if loop.index == 1 %}
-                                        🥇
-
-                                    {% elif loop.index == 2 %}
-                                        🥈
-
-                                    {% else %}
-                                        🥉
+                                    {% if loop.index == 1 %}🥇
+                                    {% elif loop.index == 2 %}🥈
+                                    {% else %}🥉
                                     {% endif %}
                                 </div>
-
                                 <div>
-                                    <h3>
-                                        {{ name }}
-                                    </h3>
-
-                                    <p>
-                                        {{ count }}회 기록됨
-                                    </p>
+                                    <h3>{{ name }}</h3>
+                                    <p>{{ count }}회 기록됨</p>
                                 </div>
-
                             </div>
 
                             <div class="rank-drink-icon">
-
-                                {% if "물" in name %}
-                                    💧
-
-                                {% elif
-                                    "커피" in name
-                                    or "아메리카노" in name
-                                    or "라떼" in name
-                                %}
-                                    ☕
-
-                                {% elif "비타민" in name %}
-                                    🍋
-
-                                {% elif "콜라" in name %}
-                                    🥤
-
-                                {% else %}
-                                    🧃
+                                {% if "물" in name %}💧
+                                {% elif "콜라" in name %}🥤
+                                {% elif "커피" in name or "아메리카노" in name or "라떼" in name %}☕
+                                {% elif "비타민" in name %}🍋
+                                {% else %}🧃
                                 {% endif %}
-
                             </div>
                         </div>
-
                     {% endfor %}
-
                 {% else %}
-
-                    <p class="empty-text">
-                        아직 랭킹 데이터가 없습니다.
-                    </p>
-
+                    <p class="empty-text">아직 랭킹 데이터가 없습니다.</p>
                 {% endif %}
-
             </div>
-
         </section>
 
 
         <section class="quick-menu">
-
-            <a
-                href="/logs"
-                class="quick-btn"
-            >
-                📝 전체 로그
-            </a>
-
-            <a
-                href="/profile"
-                class="quick-btn"
-            >
-                👤 마이페이지
-            </a>
-
+            <a href="/logs" class="quick-btn">📝 전체 로그</a>
+            <a href="/profile" class="quick-btn">👤 마이페이지</a>
         </section>
 
 
         <section class="mobile-card">
-
-            <h2>
-                월간 음수량
-            </h2>
-
-            <div class="mini-monthly-chart">
-
-                {% for day in monthly_data %}
-
-                    <button
-                        type="button"
-                        class="
-                            mini-month-wrap
-                            month-day-button
-                        "
-                        onclick="
-                            showMonthlyDetail(
-                                '{{ day.day }}',
-                                '{{ day.amount }}',
-                                '{{ day.rate }}',
-                                '{{ day.status }}'
-                            )
-                        "
-                    >
-                        <div class="mini-bar-area">
-
-                            <div
-                                class="
-                                    mini-month-bar
-                                    {{ day.color }}
-                                "
-                                style="height: {{ day.height }}%;"
-                            >
-                            </div>
-
-                        </div>
-
-                        <span>
-                            {{ day.day }}
-                        </span>
-                    </button>
-
-                {% endfor %}
-
-            </div>
-
-            <div
-                id="monthly-detail-card"
-                class="monthly-detail-card"
-            >
-                <p class="monthly-detail-label">
-                    날짜별 기록
-                </p>
-
-                <h3 id="detail-day">
-                    막대를 눌러 확인해보세요
-                </h3>
-
-                <div class="monthly-detail-grid">
-
-                    <div>
-                        <span>
-                            음수량
-                        </span>
-
-                        <strong id="detail-amount">
-                            -
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>
-                            달성률
-                        </span>
-
-                        <strong id="detail-rate">
-                            -
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>
-                            상태
-                        </span>
-
-                        <strong id="detail-status">
-                            -
-                        </strong>
-                    </div>
-
-                </div>
-            </div>
-
+            <h2>월간 음수량</h2>
+            <p class="empty-text">아직 저장된 월간 음수 기록이 없습니다.</p>
         </section>
 
 
         <section class="mobile-card">
-
-            <h2>
-                오늘의 평가
-            </h2>
-
-            <p
-                id="daily-feedback"
-                class="daily-feedback-box"
-            >
+            <h2>오늘의 평가</h2>
+            <p id="daily-feedback" class="daily-feedback-box">
                 {{ daily_feedback }}
             </p>
-
         </section>
 
     </div>
 
 
     <script>
-        function showMonthlyDetail(day, amount, rate, status) {
-            document.getElementById("detail-day").textContent = day + "일 기록";
-            document.getElementById("detail-amount").textContent = amount + "ml";
-            document.getElementById("detail-rate").textContent = rate + "%";
-            document.getElementById("detail-status").textContent = status;
-        }
-    </script>
+        function updateStatusElement(elementId, status, successText, warningText, dangerText) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
 
-
-    <script>
-        function updateStatusElement(
-            elementId,
-            status,
-            successText,
-            warningText,
-            dangerText
-        ) {
-            const element =
-                document.getElementById(
-                    elementId
-                );
-
-            if (!element) {
-                return;
-            }
-
-            element.classList.remove(
-                "success",
-                "warning",
-                "danger"
-            );
-
-            element.classList.add(
-                status
-            );
+            element.classList.remove("success", "warning", "danger");
+            element.classList.add(status);
 
             if (status === "success") {
-                element.textContent =
-                    successText;
-
-            } else if (
-                status === "warning"
-            ) {
-                element.textContent =
-                    warningText;
-
+                element.textContent = successText;
+            } else if (status === "warning") {
+                element.textContent = warningText;
             } else {
-                element.textContent =
-                    dangerText;
+                element.textContent = dangerText;
             }
         }
-
 
         function escapeHtml(value) {
             return String(value)
-                .replaceAll(
-                    "&",
-                    "&amp;"
-                )
-                .replaceAll(
-                    "<",
-                    "&lt;"
-                )
-                .replaceAll(
-                    ">",
-                    "&gt;"
-                )
-                .replaceAll(
-                    '"',
-                    "&quot;"
-                )
-                .replaceAll(
-                    "'",
-                    "&#039;"
-                );
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
         }
 
+        function getDrinkIcon(drinkName) {
+            const name = String(drinkName);
 
-        function getDrinkIcon(
-            drinkName
-        ) {
-            const name =
-                String(drinkName);
-
-            if (
-                name.includes("물")
-            ) {
-                return "💧";
-            }
-
-            if (
-                name.includes("커피")
-                || name.includes(
-                    "아메리카노"
-                )
-                || name.includes(
-                    "라떼"
-                )
-            ) {
-                return "☕";
-            }
-
-            if (
-                name.includes("비타민")
-            ) {
-                return "🍋";
-            }
-
-            if (
-                name.includes("콜라")
-            ) {
-                return "🥤";
-            }
+            if (name.includes("물")) return "💧";
+            if (name.includes("콜라")) return "🥤";
+            if (name.includes("커피") || name.includes("아메리카노") || name.includes("라떼")) return "☕";
+            if (name.includes("비타민")) return "🍋";
 
             return "🧃";
         }
 
+        function renderRecentLogs(logs) {
+            const logList = document.getElementById("recent-log-list");
+            if (!logList) return;
 
-        function renderRecentLogs(
-            logs
-        ) {
-            const logList =
-                document.getElementById(
-                    "recent-log-list"
-                );
-
-            if (!logList) {
+            if (!logs || logs.length === 0) {
+                logList.innerHTML = `<p class="empty-text">아직 기록이 없습니다.</p>`;
                 return;
             }
 
-            if (
-                !logs
-                || logs.length === 0
-            ) {
-                logList.innerHTML = `
-                    <p class="empty-text">
-                        아직 기록이 없습니다.
-                    </p>
-                `;
+            logList.innerHTML = logs.map(log => `
+                <div class="preview-log-card">
+                    <div>
+                        <strong>${escapeHtml(log.drink)}</strong>
+                        <p>${escapeHtml(log.time)} · ${escapeHtml(log.consumed_amount)}ml · ${escapeHtml(log.drink_ratio)}%</p>
+                    </div>
+                    <div class="preview-log-right">
+                        <p>☕ ${escapeHtml(log.caffeine)}mg</p>
+                        <p>🍬 ${escapeHtml(log.sugar)}g</p>
+                        <p>🍋 ${escapeHtml(log.vitamin)}mg</p>
+                    </div>
+                </div>
+            `).join("");
+        }
 
+        function renderDrinkType(drinkType) {
+            if (!drinkType) return;
+
+            const emojiEl = document.getElementById("drink-type-emoji");
+            const nameEl = document.getElementById("drink-type-name");
+            const descEl = document.getElementById("drink-type-description");
+
+            if (emojiEl) emojiEl.textContent = drinkType.emoji || "💧";
+            if (nameEl) nameEl.textContent = drinkType.name || "분석 전";
+            if (descEl) descEl.textContent = drinkType.description || "";
+        }
+
+        function renderRanking(ranking) {
+            const rankingList = document.getElementById("ranking-list");
+            if (!rankingList) return;
+
+            if (!ranking || ranking.length === 0) {
+                rankingList.innerHTML = `<p class="empty-text">아직 랭킹 데이터가 없습니다.</p>`;
                 return;
             }
 
-            logList.innerHTML =
-                logs.map(log => `
-                    <div class="preview-log-card">
-                        <div>
-                            <strong>
-                                ${escapeHtml(log.drink)}
-                            </strong>
+            rankingList.innerHTML = ranking.map((item, index) => {
+                const name = item[0];
+                const count = item[1];
 
-                            <p>
-                                ${escapeHtml(log.time)}
-                                ·
-                                ${escapeHtml(
-                                    log.consumed_amount
-                                )}ml
-                                ·
-                                ${escapeHtml(
-                                    log.drink_ratio
-                                )}%
-                            </p>
+                let rankClass = "";
+                let medal = "🥉";
+
+                if (index === 0) {
+                    rankClass = "first";
+                    medal = "🥇";
+                } else if (index === 1) {
+                    rankClass = "second";
+                    medal = "🥈";
+                } else if (index === 2) {
+                    rankClass = "third";
+                    medal = "🥉";
+                }
+
+                return `
+                    <div class="ranking-card ${rankClass}">
+                        <div class="rank-left">
+                            <div class="rank-badge">${medal}</div>
+                            <div>
+                                <h3>${escapeHtml(name)}</h3>
+                                <p>${escapeHtml(count)}회 기록됨</p>
+                            </div>
                         </div>
-
-                        <div class="preview-log-right">
-                            <p>
-                                ☕
-                                ${escapeHtml(
-                                    log.caffeine
-                                )}mg
-                            </p>
-
-                            <p>
-                                🍬
-                                ${escapeHtml(
-                                    log.sugar
-                                )}g
-                            </p>
-
-                            <p>
-                                🍋
-                                ${escapeHtml(
-                                    log.vitamin
-                                )}mg
-                            </p>
+                        <div class="rank-drink-icon">
+                            ${getDrinkIcon(name)}
                         </div>
                     </div>
-                `).join("");
-        }
-
-
-        function renderDrinkType(
-            drinkType
-        ) {
-            if (!drinkType) {
-                return;
-            }
-
-            document.getElementById(
-                "drink-type-emoji"
-            ).textContent =
-                drinkType.emoji;
-
-            document.getElementById(
-                "drink-type-name"
-            ).textContent =
-                drinkType.name;
-
-            document.getElementById(
-                "drink-type-description"
-            ).textContent =
-                drinkType.description;
-        }
-
-
-        function renderRanking(
-            ranking
-        ) {
-            const rankingList =
-                document.getElementById(
-                    "ranking-list"
-                );
-
-            if (!rankingList) {
-                return;
-            }
-
-            if (
-                !ranking
-                || ranking.length === 0
-            ) {
-                rankingList.innerHTML = `
-                    <p class="empty-text">
-                        아직 랭킹 데이터가 없습니다.
-                    </p>
                 `;
-
-                return;
-            }
-
-            rankingList.innerHTML =
-                ranking.map(
-                    (item, index) => {
-                        const name =
-                            item[0];
-
-                        const count =
-                            item[1];
-
-                        let rankClass = "";
-                        let medal = "🥉";
-
-                        if (index === 0) {
-                            rankClass = "first";
-                            medal = "🥇";
-
-                        } else if (
-                            index === 1
-                        ) {
-                            rankClass = "second";
-                            medal = "🥈";
-
-                        } else if (
-                            index === 2
-                        ) {
-                            rankClass = "third";
-                            medal = "🥉";
-                        }
-
-                        return `
-                            <div
-                                class="
-                                    ranking-card
-                                    ${rankClass}
-                                "
-                            >
-                                <div class="rank-left">
-
-                                    <div class="rank-badge">
-                                        ${medal}
-                                    </div>
-
-                                    <div>
-                                        <h3>
-                                            ${escapeHtml(name)}
-                                        </h3>
-
-                                        <p>
-                                            ${escapeHtml(count)}
-                                            회 기록됨
-                                        </p>
-                                    </div>
-
-                                </div>
-
-                                <div class="rank-drink-icon">
-                                    ${getDrinkIcon(name)}
-                                </div>
-                            </div>
-                        `;
-                    }
-                ).join("");
+            }).join("");
         }
-
 
         async function refreshDashboard() {
             try {
-                const response =
-                    await fetch(
-                        "/api/dashboard_data",
-                        {
-                            method: "GET",
-                            cache: "no-store"
-                        }
-                    );
+                const response = await fetch("/api/dashboard_data", {
+                    method: "GET",
+                    cache: "no-store"
+                });
 
-                const data =
-                    await response.json();
+                const data = await response.json();
+                if (!response.ok || !data.ok) return;
 
-                if (
-                    !response.ok
-                    || !data.ok
-                ) {
-                    console.error(
-                        "대시보드 조회 실패:",
-                        data.error
-                    );
+                document.getElementById("water-rate").textContent = data.water_rate + "%";
+                document.getElementById("water-summary").textContent = data.total_water + " / " + data.recommended_water + " ml";
+                document.getElementById("total-water").textContent = data.total_water + " ml";
+                document.getElementById("total-caffeine").textContent = data.total_caffeine + " mg";
+                document.getElementById("total-sugar").textContent = data.total_sugar + " g";
+                document.getElementById("total-vitamin").textContent = data.total_vitamin + " mg";
+                document.getElementById("daily-feedback").textContent = data.daily_feedback;
 
-                    return;
+                const ring = document.getElementById("water-progress-ring");
+                if (ring) ring.style.setProperty("--progress", data.water_rate_display);
+
+                const waterFeedback = document.getElementById("water-feedback");
+                if (waterFeedback && data.water_status) {
+                    waterFeedback.textContent = data.water_status.message;
+                    waterFeedback.classList.remove("success", "warning", "danger");
+                    waterFeedback.classList.add(data.water_status.color);
                 }
 
-                document.getElementById(
-                    "water-rate"
-                ).textContent =
-                    data.water_rate
-                    + "%";
+                updateStatusElement("caffeine-status", data.caffeine_status, "😊 적정", "😐 주의", "⚠ 높음");
+                updateStatusElement("sugar-status", data.sugar_status, "😊 적정", "😐 주의", "⚠ 높음");
+                updateStatusElement("vitamin-status", data.vitamin_status, "😊 충분", "😐 보통", "⚠ 낮음");
 
-                document.getElementById(
-                    "water-summary"
-                ).textContent =
-                    data.total_water
-                    + " / "
-                    + data.recommended_water
-                    + " ml";
-
-                document.getElementById(
-                    "total-water"
-                ).textContent =
-                    data.total_water
-                    + " ml";
-
-                document.getElementById(
-                    "total-caffeine"
-                ).textContent =
-                    data.total_caffeine
-                    + " mg";
-
-                document.getElementById(
-                    "total-sugar"
-                ).textContent =
-                    data.total_sugar
-                    + " g";
-
-                document.getElementById(
-                    "total-vitamin"
-                ).textContent =
-                    data.total_vitamin
-                    + " mg";
-
-                document.getElementById(
-                    "daily-feedback"
-                ).textContent =
-                    data.daily_feedback;
-
-                const ring =
-                    document.getElementById(
-                        "water-progress-ring"
-                    );
-
-                ring.style.setProperty(
-                    "--progress",
-                    data.water_rate_display
-                );
-
-                const waterFeedback =
-                    document.getElementById(
-                        "water-feedback"
-                    );
-
-                waterFeedback.textContent =
-                    data.water_status.message;
-
-                waterFeedback.classList.remove(
-                    "success",
-                    "warning",
-                    "danger"
-                );
-
-                waterFeedback.classList.add(
-                    data.water_status.color
-                );
-
-                updateStatusElement(
-                    "caffeine-status",
-                    data.caffeine_status,
-                    "😊 적정",
-                    "😐 주의",
-                    "⚠ 높음"
-                );
-
-                updateStatusElement(
-                    "sugar-status",
-                    data.sugar_status,
-                    "😊 적정",
-                    "😐 주의",
-                    "⚠ 높음"
-                );
-
-                updateStatusElement(
-                    "vitamin-status",
-                    data.vitamin_status,
-                    "😊 충분",
-                    "😐 보통",
-                    "⚠ 낮음"
-                );
-
-                renderRecentLogs(
-                    data.latest_logs
-                );
-
-                renderDrinkType(
-                    data.drink_type
-                );
-
-                renderRanking(
-                    data.ranking
-                );
+                renderRecentLogs(data.latest_logs);
+                renderDrinkType(data.drink_type);
+                renderRanking(data.ranking);
 
             } catch (error) {
-                console.error(
-                    "대시보드 갱신 실패:",
-                    error
-                );
+                console.error("대시보드 갱신 실패:", error);
             }
         }
-
 
         function connectDashboardEvents() {
+            const eventSource = new EventSource("/api/dashboard_events");
 
-            const eventSource =
-                new EventSource(
-                    "/api/dashboard_events"
-                );
-
-            eventSource.onmessage =
-                function(event) {
-                    try {
-                        const message =
-                            JSON.parse(
-                                event.data
-                            );
-
-                        if (
-                            message.type
-                            ===
-                            "dashboard_update"
-                        ) {
-                            refreshDashboard();
-                        }
-
-                    } catch (error) {
-                        console.error(
-                            "실시간 이벤트 처리 실패:",
-                            error
-                        );
+            eventSource.onmessage = function(event) {
+                try {
+                    const message = JSON.parse(event.data);
+                    if (message.type === "dashboard_update") {
+                        refreshDashboard();
                     }
-                };
+                } catch (error) {
+                    console.error("실시간 이벤트 처리 실패:", error);
+                }
+            };
 
-
-            eventSource.onerror =
-                function() {
-                    console.log(
-                        "실시간 연결 재시도 중..."
-                    );
-                };
+            eventSource.onerror = function() {
+                console.log("실시간 연결 재시도 중...");
+            };
         }
 
-
-        window.addEventListener(
-            "DOMContentLoaded",
-            function() {
-
-                refreshDashboard();
-
-                connectDashboardEvents();
-            }
-        );
+        window.addEventListener("DOMContentLoaded", function() {
+            refreshDashboard();
+            connectDashboardEvents();
+        });
     </script>
-
 </body>
 </html>
