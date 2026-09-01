@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>잘마시조 로그</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="mobile-body">
+    <div class="mobile-app">
+        <header class="simple-header">
+            <a href="/dashboard" class="back-btn">← 뒤로</a>
+            <h1>음수 로그</h1>
+        </header>
+
+        <section class="mobile-card">
+            <h2>전체 로그 확인 및 수정</h2>
+            <p class="hint">
+                실제 마신 양과 전체 용량의 비율을 기준으로 카페인, 당류, 비타민이 계산됩니다.
+            </p>
+
+            {% if reversed_logs %}
+                {% for log in reversed_logs %}
+                <div class="log-mobile-card">
+                    <div class="log-top-row">
+                        <div>
+                            <strong>{{ log.drink }}</strong>
+                            <p>{{ log.time }} · {{ log.status }}</p>
+                        </div>
+                        <span class="ratio-chip">{{ log.drink_ratio }}%</span>
+                    </div>
+
+                    <div class="log-info-grid">
+                        <div>마신 양 <strong>{{ log.consumed_amount }}ml</strong></div>
+                        <div>전체 용량 <strong>{{ log.total_volume }}ml</strong></div>
+                        <div>카페인 <strong>{{ log.caffeine }}mg</strong></div>
+                        <div>당류 <strong>{{ log.sugar }}g</strong></div>
+                        <div>비타민 <strong>{{ log.vitamin }}mg</strong></div>
+                    </div>
+
+                    <p class="log-source">기록 방식: {{ log.source }}</p>
+
+                    <form action="/delete_log/{{ log.real_index }}" method="POST">
+                        <button class="delete-log-btn" type="submit">삭제</button>
+                    </form>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-text">기록된 로그가 없습니다.</p>
+            {% endif %}
+        </section>
+    </div>
+</body>
+</html>
