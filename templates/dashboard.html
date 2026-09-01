@@ -13,38 +13,21 @@
         <header class="app-header">
             <div>
                 <h1>💧 잘마시조</h1>
-                <p class="hello-text">
-                    안녕하세요, {{ user.name }}님 👋
-                </p>
-
-                <p class="sub-text">
-                    오늘도 건강한 하루 보내세요!
-                </p>
+                <p class="hello-text">안녕하세요, {{ user.name }}님 👋</p>
+                <p class="sub-text">오늘도 건강한 하루 보내세요!</p>
             </div>
-
-            <a href="/profile" class="profile-chip">
-                내 정보
-            </a>
+            <a href="/profile" class="profile-chip">내 정보</a>
         </header>
 
 
         <section class="ring-section">
             <div id="water-progress-ring" class="progress-ring" style="--progress: {{ water_rate_display }};">
                 <div class="progress-ring-inner">
-                    <p id="water-rate" class="ring-percent">
-                        {{ water_rate }}%
-                    </p>
-
-                    <p id="water-summary" class="ring-sub">
-                        {{ total_water }} / {{ user.recommended_water }} ml
-                    </p>
+                    <p id="water-rate" class="ring-percent">{{ water_rate }}%</p>
+                    <p id="water-summary" class="ring-sub">{{ total_water }} / {{ user.recommended_water }} ml</p>
                 </div>
             </div>
-
-            <p class="ring-label">
-                오늘 음수 달성률
-            </p>
-
+            <p class="ring-label">오늘 음수 달성률</p>
             <p id="water-feedback" class="ring-feedback {{ water_status.color }}">
                 {{ water_status.message }}
             </p>
@@ -55,25 +38,17 @@
             <div class="stat-card">
                 <p class="stat-icon">💧</p>
                 <p class="stat-title">오늘 음수량</p>
-                <p id="total-water" class="stat-value">
-                    {{ total_water }} ml
-                </p>
+                <p id="total-water" class="stat-value">{{ total_water }} ml</p>
             </div>
 
             <div class="stat-card">
                 <p class="stat-icon">☕</p>
                 <p class="stat-title">카페인</p>
-                <p id="total-caffeine" class="stat-value">
-                    {{ total_caffeine }} mg
-                </p>
-
+                <p id="total-caffeine" class="stat-value">{{ total_caffeine }} mg</p>
                 <p id="caffeine-status" class="mini-status {{ caffeine_status }}">
-                    {% if caffeine_status == "success" %}
-                        😊 적정
-                    {% elif caffeine_status == "warning" %}
-                        😐 주의
-                    {% else %}
-                        ⚠ 높음
+                    {% if caffeine_status == "success" %}😊 적정
+                    {% elif caffeine_status == "warning" %}😐 주의
+                    {% else %}⚠ 높음
                     {% endif %}
                 </p>
             </div>
@@ -81,17 +56,11 @@
             <div class="stat-card">
                 <p class="stat-icon">🍬</p>
                 <p class="stat-title">당류</p>
-                <p id="total-sugar" class="stat-value">
-                    {{ total_sugar }} g
-                </p>
-
+                <p id="total-sugar" class="stat-value">{{ total_sugar }} g</p>
                 <p id="sugar-status" class="mini-status {{ sugar_status }}">
-                    {% if sugar_status == "success" %}
-                        😊 적정
-                    {% elif sugar_status == "warning" %}
-                        😐 주의
-                    {% else %}
-                        ⚠ 높음
+                    {% if sugar_status == "success" %}😊 적정
+                    {% elif sugar_status == "warning" %}😐 주의
+                    {% else %}⚠ 높음
                     {% endif %}
                 </p>
             </div>
@@ -99,17 +68,11 @@
             <div class="stat-card">
                 <p class="stat-icon">🍋</p>
                 <p class="stat-title">비타민</p>
-                <p id="total-vitamin" class="stat-value">
-                    {{ total_vitamin }} mg
-                </p>
-
+                <p id="total-vitamin" class="stat-value">{{ total_vitamin }} mg</p>
                 <p id="vitamin-status" class="mini-status {{ vitamin_status }}">
-                    {% if vitamin_status == "success" %}
-                        😊 충분
-                    {% elif vitamin_status == "warning" %}
-                        😐 보통
-                    {% else %}
-                        ⚠ 낮음
+                    {% if vitamin_status == "success" %}😊 충분
+                    {% elif vitamin_status == "warning" %}😐 보통
+                    {% else %}⚠ 낮음
                     {% endif %}
                 </p>
             </div>
@@ -121,9 +84,7 @@
                 <div>
                     <h2>내 프로필</h2>
                     <p>{{ user.user_type }}</p>
-                    <span>
-                        권장 음수량 {{ user.recommended_water }}ml · 등록 음료 {{ drinks|length }}개
-                    </span>
+                    <span>권장 음수량 {{ user.recommended_water }}ml · 등록 음료 {{ drinks|length }}개</span>
                 </div>
                 <strong>›</strong>
             </a>
@@ -141,16 +102,12 @@
                     {% for drink in drinks %}
                         <div class="fav-drink-btn">
                             <strong>{{ drink.name }}</strong>
-                            <span>
-                                전체 {{ drink.total_volume }}ml · 카페인 {{ drink.total_caffeine }}mg · 당류 {{ drink.total_sugar }}g · 비타민 {{ drink.total_vitamin }}mg
-                            </span>
+                            <span>전체 {{ drink.total_volume }}ml · 카페인 {{ drink.total_caffeine }}mg · 당류 {{ drink.total_sugar }}g · 비타민 {{ drink.total_vitamin }}mg</span>
                         </div>
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="empty-text">
-                    등록된 음료가 없습니다. 마이페이지에서 추가할 수 있습니다.
-                </p>
+                <p class="empty-text">등록된 음료가 없습니다. 마이페이지에서 추가할 수 있습니다.</p>
             {% endif %}
         </section>
 
@@ -167,11 +124,8 @@
                         <div class="preview-log-card">
                             <div>
                                 <strong>{{ log.drink }}</strong>
-                                <p>
-                                    {{ log.time }} · {{ log.consumed_amount }}ml · {{ log.drink_ratio }}%
-                                </p>
+                                <p>{{ log.time }} · {{ log.consumed_amount }}ml · {{ log.drink_ratio }}%</p>
                             </div>
-
                             <div class="preview-log-right">
                                 <p>☕ {{ log.caffeine }}mg</p>
                                 <p>🍬 {{ log.sugar }}g</p>
@@ -193,9 +147,7 @@
             </div>
 
             <div class="drink-type-content">
-                <div id="drink-type-emoji" class="drink-type-emoji">
-                    {{ drink_type.emoji }}
-                </div>
+                <div id="drink-type-emoji" class="drink-type-emoji">{{ drink_type.emoji }}</div>
                 <div>
                     <h3 id="drink-type-name">{{ drink_type.name }}</h3>
                     <p id="drink-type-description">{{ drink_type.description }}</p>
@@ -226,7 +178,6 @@
                                     <p>{{ count }}회 기록됨</p>
                                 </div>
                             </div>
-
                             <div class="rank-drink-icon">
                                 {% if "물" in name %}💧
                                 {% elif "콜라" in name %}🥤
@@ -258,9 +209,7 @@
 
         <section class="mobile-card">
             <h2>오늘의 평가</h2>
-            <p id="daily-feedback" class="daily-feedback-box">
-                {{ daily_feedback }}
-            </p>
+            <p id="daily-feedback" class="daily-feedback-box">{{ daily_feedback }}</p>
         </section>
 
     </div>
@@ -393,13 +342,21 @@
                 const data = await response.json();
                 if (!response.ok || !data.ok) return;
 
-                document.getElementById("water-rate").textContent = data.water_rate + "%";
-                document.getElementById("water-summary").textContent = data.total_water + " / " + data.recommended_water + " ml";
-                document.getElementById("total-water").textContent = data.total_water + " ml";
-                document.getElementById("total-caffeine").textContent = data.total_caffeine + " mg";
-                document.getElementById("total-sugar").textContent = data.total_sugar + " g";
-                document.getElementById("total-vitamin").textContent = data.total_vitamin + " mg";
-                document.getElementById("daily-feedback").textContent = data.daily_feedback;
+                const waterRateEl = document.getElementById("water-rate");
+                const waterSummaryEl = document.getElementById("water-summary");
+                const totalWaterEl = document.getElementById("total-water");
+                const totalCaffeineEl = document.getElementById("total-caffeine");
+                const totalSugarEl = document.getElementById("total-sugar");
+                const totalVitaminEl = document.getElementById("total-vitamin");
+                const dailyFeedbackEl = document.getElementById("daily-feedback");
+
+                if (waterRateEl) waterRateEl.textContent = data.water_rate + "%";
+                if (waterSummaryEl) waterSummaryEl.textContent = data.total_water + " / " + data.recommended_water + " ml";
+                if (totalWaterEl) totalWaterEl.textContent = data.total_water + " ml";
+                if (totalCaffeineEl) totalCaffeineEl.textContent = data.total_caffeine + " mg";
+                if (totalSugarEl) totalSugarEl.textContent = data.total_sugar + " g";
+                if (totalVitaminEl) totalVitaminEl.textContent = data.total_vitamin + " mg";
+                if (dailyFeedbackEl) dailyFeedbackEl.textContent = data.daily_feedback;
 
                 const ring = document.getElementById("water-progress-ring");
                 if (ring) ring.style.setProperty("--progress", data.water_rate_display);
