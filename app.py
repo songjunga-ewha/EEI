@@ -11,27 +11,19 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     stream_with_context,
     url_for,
 )
 
 app = Flask(__name__)
+# 개별 사용자 암호화 세션을 위한 비밀키 설정
+app.secret_key = "smart_coaster_secret_key_1234_abc"
 
 
 # ==========================================
-# 글로벌 데이터 정의
+# 구독자 관리 (SSE용)
 # ==========================================
-
-# 사용자가 초기 설정을 완료하기 전에는
-# 어떠한 가짜 사용자 정보도 넣지 않습니다.
-saved_user = None
-
-# 사용자가 직접 등록한 즐겨찾기 음료
-saved_drinks = []
-
-# 실제 라즈베리파이/API를 통해 들어온 음수 기록
-drink_logs = []
-
 dashboard_subscribers = []
 dashboard_subscribers_lock = threading.Lock()
 
@@ -255,6 +247,7 @@ def get_drink_type_card(
     total_caffeine,
     total_sugar,
     total_vitamin,
+    drink_logs,
 ):
     if not drink_logs:
         return {
@@ -359,7 +352,7 @@ def get_drink_type_card(
     }
 
 
-def get_drink_ranking():
+def get_drink_ranking(drink_logs):
     ranking = {}
 
     for log in drink_logs:
@@ -379,7 +372,7 @@ def get_drink_ranking():
     )
 
 
-def get_reversed_logs_with_index():
+def get_reversed_logs_with_index(drink_logs):
     result = []
 
     for index in range(
@@ -395,9 +388,6 @@ def get_reversed_logs_with_index():
 
 
 def save_user_and_drinks(form):
-    global saved_user
-    global saved_drinks
-
     name = form.get(
         "name",
         "",
@@ -497,7 +487,8 @@ def save_user_and_drinks(form):
             drink
         )
 
-    saved_user = {
+    # ★ 세션에 개별 저장 ★
+    session["user"] = {
         "name": name,
         "age": age,
         "weight": weight,
@@ -508,9 +499,16 @@ def save_user_and_drinks(form):
         "sugar_limit": 50,
         "vitamin_goal": 100,
     }
+    session["drinks"] = saved_drinks
+    if "logs" not in session:
+        session["logs"] = []
 
 
 def get_dashboard_context():
+    saved_user = session.get("user", {})
+    saved_drinks = session.get("drinks", [])
+    drink_logs = session.get("logs", [])
+
     total_water = sum(
         log.get(
             "consumed_amount",
@@ -552,9 +550,9 @@ def get_dashboard_context():
         2,
     )
 
-    target_water = saved_user[
-        "recommended_water"
-    ]
+    target_water = saved_user.get(
+        "recommended_water", 2000
+    )
 
     water_rate = calculate_rate(
         total_water,
@@ -567,23 +565,17 @@ def get_dashboard_context():
 
     caffeine_rate = calculate_rate(
         total_caffeine,
-        saved_user[
-            "caffeine_limit"
-        ],
+        saved_user.get("caffeine_limit", 300),
     )
 
     sugar_rate = calculate_rate(
         total_sugar,
-        saved_user[
-            "sugar_limit"
-        ],
+        saved_user.get("sugar_limit", 50),
     )
 
     vitamin_rate = calculate_rate(
         total_vitamin,
-        saved_user[
-            "vitamin_goal"
-        ],
+        saved_user.get("vitamin_goal", 100),
     )
 
     water_status = get_water_status(
@@ -614,14 +606,15 @@ def get_dashboard_context():
         total_caffeine,
         total_sugar,
         total_vitamin,
+        drink_logs,
     )
 
     return {
         "user": saved_user,
         "drinks": saved_drinks,
         "logs": drink_logs,
-        "reversed_logs": get_reversed_logs_with_index(),
-        "ranking": get_drink_ranking(),
+        "reversed_logs": get_reversed_logs_with_index(drink_logs),
+        "ranking": get_drink_ranking(drink_logs),
         "daily_feedback": daily_feedback,
         "drink_type": drink_type,
         "total_water": total_water,
@@ -689,7 +682,7 @@ def index():
             url_for("dashboard")
         )
 
-    if saved_user is not None:
+    if session.get("user") is not None:
         return redirect(
             url_for("dashboard")
         )
@@ -701,7 +694,7 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    if saved_user is None:
+    if session.get("user") is None:
         return redirect(
             url_for("index")
         )
@@ -719,7 +712,7 @@ def dashboard():
     methods=["GET", "POST"],
 )
 def profile():
-    if saved_user is None:
+    if session.get("user") is None:
         return redirect(
             url_for("index")
         )
@@ -737,14 +730,14 @@ def profile():
 
     return render_template(
         "profile.html",
-        user=saved_user,
-        drinks=saved_drinks,
+        user=session.get("user"),
+        drinks=session.get("drinks", []),
     )
 
 
 @app.route("/logs")
 def logs_page():
-    if saved_user is None:
+    if session.get("user") is None:
         return redirect(
             url_for("index")
         )
@@ -762,13 +755,11 @@ def logs_page():
     methods=["POST"],
 )
 def add_favorite(drink_index):
-    if saved_user is None:
+    if session.get("user") is None:
         return redirect(
             url_for("index")
         )
 
-    # 가짜 섭취량을 만들지 않습니다.
-    # 실제 섭취량은 라즈베리파이/API를 통해 기록됩니다.
     return redirect(
         url_for("dashboard")
     )
@@ -779,14 +770,15 @@ def add_favorite(drink_index):
     methods=["POST"],
 )
 def delete_log(log_index):
+    drink_logs = session.get("logs", [])
+
     if (
         0 <= log_index
         < len(drink_logs)
     ):
-        drink_logs.pop(
-            log_index
-        )
-
+        drink_logs.pop(log_index)
+        session["logs"] = drink_logs  # 수정된 리스트 재저장
+        session.modified = True
         notify_dashboard_update()
 
     return redirect(
@@ -928,9 +920,11 @@ def api_add_drink_log():
         ),
     }
 
-    drink_logs.append(
-        new_log
-    )
+    # 개별 사용자 세션의 음수 로그에 기록 추가
+    drink_logs = session.get("logs", [])
+    drink_logs.append(new_log)
+    session["logs"] = drink_logs
+    session.modified = True
 
     notify_dashboard_update()
 
@@ -946,6 +940,8 @@ def api_add_drink_log():
     methods=["GET"],
 )
 def api_dashboard_data():
+    saved_user = session.get("user")
+
     if saved_user is None:
         return jsonify({
             "ok": False,
@@ -1011,6 +1007,8 @@ def api_dashboard_data():
     methods=["GET"],
 )
 def api_user_settings():
+    saved_user = session.get("user")
+
     if saved_user is None:
         return jsonify({
             "ok": False,
@@ -1118,3 +1116,6 @@ def api_dashboard_events():
         },
     )
 
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
