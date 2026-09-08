@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>즐겨찾기 등록 - 잘마시조</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+
+        .favorite-page {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .favorite-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .favorite-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .favorite-back {
+            text-decoration: none;
+            color: inherit;
+            font-size: 14px;
+        }
+
+        .favorite-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .favorite-card h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+
+        .favorite-description {
+            color: #777;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .upload-box {
+            border: 2px dashed #d9d9d9;
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .upload-box input[type="file"] {
+            width: 100%;
+            margin-bottom: 14px;
+        }
+
+        .favorite-button {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #222;
+            color: white;
+        }
+
+        .favorite-button:hover {
+            opacity: 0.9;
+        }
+
+        .error-message {
+            background: #fff1f1;
+            color: #d33;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .analysis-result {
+            text-align: center;
+        }
+
+        .analysis-color {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .analysis-color-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .analysis-score {
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .candidate-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .candidate-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .candidate-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border: 1px solid #eeeeee;
+            border-radius: 14px;
+            padding: 12px;
+        }
+
+        .candidate-name {
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .candidate-form {
+            margin: 0;
+        }
+
+        .candidate-button {
+            border: none;
+            border-radius: 10px;
+            padding: 9px 12px;
+            cursor: pointer;
+            background: #222;
+            color: white;
+            font-size: 13px;
+        }
+
+        .favorite-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .favorite-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #eeeeee;
+            border-radius: 14px;
+            padding: 12px;
+        }
+
+        .favorite-item-name {
+            font-weight: 600;
+        }
+
+        .favorite-item-color {
+            color: #777;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .delete-button {
+            border: none;
+            background: transparent;
+            color: #d33;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .empty-favorite {
+            text-align: center;
+            color: #888;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+    <div class="favorite-page">
+
+        <!-- ==========================================
+             헤더
+        =========================================== -->
+
+        <header class="favorite-header">
+
+            <h1>⭐ 즐겨찾기</h1>
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="favorite-back"
+            >
+                ← 대시보드
+            </a>
+
+        </header>
+
+
+        <!-- ==========================================
+             사진 업로드
+        =========================================== -->
+
+        <section class="favorite-card">
+
+            <h2>음료 등록</h2>
+
+            <p class="favorite-description">
+                음료 사진을 올리면 색상을 분석해서
+                등록할 음료 후보를 보여드려요.
+            </p>
+
+
+            <form
+                action="{{ url_for('favorite') }}"
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                <div class="upload-box">
+
+                    <div style="font-size: 40px; margin-bottom: 10px;">
+                        📷
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        음료 사진을 선택해주세요.
+                    </div>
+
+                    <input
+                        type="file"
+                        name="drink_image"
+                        accept="image/*"
+                        required
+                    >
+
+                    <button
+                        type="submit"
+                        class="favorite-button"
+                    >
+                        🎨 사진 분석하기
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- ==========================================
+             오류 메시지
+        =========================================== -->
+
+        {% if error %}
+
+        <div class="error-message">
+            ⚠️ {{ error }}
+        </div>
+
+        {% endif %}
+
+
+        <!-- ==========================================
+             색상 분석 결과
+        =========================================== -->
+
+        {% if analysis and analysis.ok %}
+
+        <section class="favorite-card analysis-result">
+
+            <div class="analysis-color">
+                {{ analysis.emoji }}
+            </div>
+
+            <div class="analysis-color-name">
+                {{ analysis.color_name }}
+            </div>
+
+            <div class="analysis-score">
+                색상 분석 결과를 바탕으로 후보를 보여드려요.
+            </div>
+
+
+            <div class="candidate-title">
+                🥤 등록할 음료를 선택해주세요
+            </div>
+
+
+            <div class="candidate-list">
+
+                {% for drink in analysis.drinks %}
+
+                <div class="candidate-item">
+
+                    <div class="candidate-name">
+                        {{ drink }}
+                    </div>
+
+                    <form
+                        class="candidate-form"
+                        action="{{ url_for('favorite_add') }}"
+                        method="POST"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="drink_name"
+                            value="{{ drink }}"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="color"
+                            value="{{ analysis.color_name }}"
+                        >
+
+                        <button
+                            type="submit"
+                            class="candidate-button"
+                        >
+                            ⭐ 등록
+                        </button>
+
+                    </form>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
+
+        <!-- ==========================================
+             현재 즐겨찾기 목록
+        =========================================== -->
+
+        <section class="favorite-card">
+
+            <h2>⭐ 내 즐겨찾기</h2>
+
+
+            {% if favorites %}
+
+            <div class="favorite-list">
+
+                {% for favorite in favorites %}
+
+                <div class="favorite-item">
+
+                    <div>
+
+                        <div class="favorite-item-name">
+                            ⭐ {{ favorite.name }}
+                        </div>
+
+                        <div class="favorite-item-color">
+                            {{ favorite.color }}
+                        </div>
+
+                    </div>
+
+
+                    <form
+                        action="{{ url_for('favorite_delete', favorite_index=loop.index0) }}"
+                        method="POST"
+                    >
+
+                        <button
+                            type="submit"
+                            class="delete-button"
+                        >
+                            삭제
+                        </button>
+
+                    </form>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-favorite">
+                아직 등록된 즐겨찾기 음료가 없어요.
+            </div>
+
+            {% endif %}
+
+        </section>
+
+
+    </div>
+
+</body>
+
+</html>
