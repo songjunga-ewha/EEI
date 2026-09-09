@@ -1115,3 +1115,395 @@ input[type="number"] {
 
     color: inherit;
 }
+
+/* ==========================================
+   수분 섭취 주의 카드
+========================================== */
+
+.water-warning-card {
+    background: linear-gradient(
+        135deg,
+        #fffaf0,
+        #fff5df
+    );
+
+    border: 1px solid #f3d58a;
+
+    box-shadow:
+        0 10px 20px rgba(210, 160, 60, 0.10);
+}
+
+.water-warning-card h2 {
+    color: #9a6b00;
+    margin-bottom: 10px;
+}
+
+.water-warning-card p {
+    margin: 0;
+
+    color: #6f5a2a;
+
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* ==========================================
+   즐겨찾기 페이지
+========================================== */
+
+.favorite-page {
+    width: 100%;
+    max-width: 430px;
+
+    margin: 0 auto;
+
+    padding: 20px 16px 32px;
+}
+
+
+/* 즐겨찾기 헤더 */
+
+.favorite-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    margin: 26px 0 20px;
+}
+
+.favorite-header h1 {
+    margin: 0;
+
+    font-size: 28px;
+
+    color: #5c78d6;
+
+    font-weight: 800;
+}
+
+.favorite-back {
+    text-decoration: none;
+
+    color: #5c78d6;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    background: white;
+
+    padding: 10px 12px;
+
+    border-radius: 999px;
+
+    box-shadow:
+        0 6px 12px rgba(80, 110, 180, 0.08);
+}
+
+
+/* 즐겨찾기 카드 */
+
+.favorite-card {
+    background: rgba(255, 255, 255, 0.94);
+
+    border-radius: 24px;
+
+    padding: 18px;
+
+    margin-bottom: 18px;
+
+    box-shadow:
+        0 10px 20px rgba(80, 110, 180, 0.08);
+}
+
+.favorite-card h2 {
+    margin: 0 0 10px;
+
+    font-size: 20px;
+
+    color: #24527a;
+}
+
+.favorite-description {
+    color: #666;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+    margin: 0 0 18px;
+}
+
+
+/* 사진 업로드 영역 */
+
+.upload-box {
+    border: 2px dashed #b9c9ed;
+
+    border-radius: 18px;
+
+    padding: 24px 16px;
+
+    text-align: center;
+
+    margin-bottom: 0;
+
+    background: #f7f9ff;
+}
+
+.upload-box input[type="file"] {
+    width: 100%;
+
+    margin-bottom: 14px;
+
+    font-size: 13px;
+}
+
+
+/* 분석 버튼 */
+
+.favorite-button {
+    width: 100%;
+
+    border: none;
+
+    border-radius: 16px;
+
+    padding: 15px;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    background: #5c78d6;
+
+    color: white;
+
+    box-shadow:
+        0 6px 12px rgba(92, 120, 214, 0.18);
+
+    transition: 0.2s;
+}
+
+.favorite-button:hover {
+    transform: translateY(-1px);
+}
+
+
+/* 오류 메시지 */
+
+.error-message {
+    background: #fff1f1;
+
+    color: #d9534f;
+
+    border: 1px solid #ffd5d5;
+
+    border-radius: 16px;
+
+    padding: 12px 14px;
+
+    margin-bottom: 18px;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+
+/* ==========================================
+   색상 분석 결과
+========================================== */
+
+.analysis-result {
+    text-align: center;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #f5f8ff
+        );
+
+    border: 1px solid #dce8ff;
+}
+
+.analysis-color {
+    font-size: 48px;
+
+    margin-bottom: 8px;
+}
+
+.analysis-color-name {
+    font-size: 20px;
+
+    font-weight: 800;
+
+    color: #24527a;
+
+    margin-bottom: 6px;
+}
+
+.analysis-score {
+    color: #777;
+
+    font-size: 13px;
+
+    margin-bottom: 20px;
+}
+
+.candidate-title {
+    font-size: 16px;
+
+    font-weight: 700;
+
+    color: #24527a;
+
+    margin-bottom: 12px;
+
+    text-align: left;
+}
+
+.candidate-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.candidate-item {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    border: 1px solid #dce8ff;
+
+    border-radius: 16px;
+
+    padding: 12px 14px;
+
+    background: #f8faff;
+}
+
+.candidate-name {
+    font-weight: 700;
+
+    text-align: left;
+
+    color: #333;
+}
+
+.candidate-form {
+    margin: 0;
+}
+
+.candidate-button {
+    border: none;
+
+    border-radius: 12px;
+
+    padding: 9px 12px;
+
+    cursor: pointer;
+
+    background: #5c78d6;
+
+    color: white;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    transition: 0.2s;
+}
+
+.candidate-button:hover {
+    transform: translateY(-1px);
+}
+
+
+/* ==========================================
+   현재 즐겨찾기 목록
+========================================== */
+
+.favorite-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.favorite-item {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    border: 1px solid #dce8ff;
+
+    border-radius: 16px;
+
+    padding: 13px 14px;
+
+    background: #f8faff;
+}
+
+.favorite-item-name {
+    font-weight: 700;
+
+    color: #333;
+}
+
+.favorite-item-color {
+    color: #777;
+
+    font-size: 12px;
+
+    margin-top: 4px;
+}
+
+.favorite-item .delete-button {
+    border: none;
+
+    background: #ffe8e8;
+
+    color: #d9534f;
+
+    border-radius: 10px;
+
+    padding: 8px 11px;
+
+    cursor: pointer;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.empty-favorite {
+    text-align: center;
+
+    color: #777;
+
+    background: #f7f9ff;
+
+    border-radius: 16px;
+
+    padding: 18px 12px;
+
+    font-size: 14px;
+}
