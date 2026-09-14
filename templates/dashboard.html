@@ -334,9 +334,9 @@
 
                     {% for favorite in favorites %}
 
-                        <a
-                            href="/favorite"
+                        <div
                             class="dashboard-favorite-item"
+                            onclick="openFavoriteConsume('{{ favorite.name }}')"
                         >
 
                             <div class="dashboard-favorite-icon">
@@ -398,11 +398,72 @@
                                 ›
                             </div>
 
-                        </a>
+                        </div>
 
                     {% endfor %}
 
                 </div>
+
+
+                <!-- 즐겨찾기 음료 섭취 기록 영역 -->
+
+                <div
+                    id="favorite-consume-box"
+                    class="favorite-consume-box"
+                    style="display: none;"
+                >
+
+                    <div class="favorite-consume-title">
+                        🥤 <span id="favorite-consume-name"></span>
+                    </div>
+
+
+                    <form
+                        action="/favorite/consume"
+                        method="POST"
+                        class="favorite-consume-form"
+                    >
+
+                        <input
+                            type="hidden"
+                            id="favorite-consume-drink"
+                            name="drink_name"
+                        >
+
+
+                        <label for="favorite-consumed-amount">
+                            섭취량
+                        </label>
+
+
+                        <div class="favorite-consume-input-row">
+
+                            <input
+                                type="number"
+                                id="favorite-consumed-amount"
+                                name="consumed_amount"
+                                min="1"
+                                step="1"
+                                placeholder="예: 200"
+                                required
+                            >
+
+                            <span>ml</span>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="favorite-consume-button"
+                        >
+                            섭취 기록하기
+                        </button>
+
+                    </form>
+
+                </div>
+
 
             {% else %}
 
@@ -428,6 +489,8 @@
             {% endif %}
 
         </section>
+
+
 
         <section class="mobile-card">
 
@@ -560,7 +623,7 @@
 
                 {% if ranking %}
 
-                    {% for name, count in ranking[:3] %}
+                    {% for item in ranking[:3] %}
 
                         <div
                             class="
@@ -595,11 +658,11 @@
                                 <div>
 
                                     <h3>
-                                        {{ name }}
+                                        {{ item.name }}
                                     </h3>
 
                                     <p>
-                                        {{ count }}회 기록됨
+                                        {{ item.count }}회 기록됨
                                     </p>
 
                                 </div>
@@ -607,27 +670,27 @@
                             </div>
 
                             <div class="rank-drink-icon">
-
-                                {% if "물" in name %}
+                                {% if "물" in item.name %}
                                     💧
 
                                 {% elif
-                                    "커피" in name
-                                    or "아메리카노" in name
-                                    or "라떼" in name
+                                    "커피" in item.name
+                                    or "아메리카노" in item.name
+                                    or "라떼" in item.name
                                 %}
                                     ☕
 
-                                {% elif "비타민" in name %}
+                                {% elif "비타민" in item.name %}
                                     🍋
 
-                                {% elif "콜라" in name %}
+                                {% elif "콜라" in item.name %}
                                     🥤
 
                                 {% else %}
                                     🧃
 
                                 {% endif %}
+                              
 
                             </div>
 
@@ -667,15 +730,61 @@
         </section>
 
 
-        <section class="mobile-card">
+        <section class="mobile-card monthly-water-card">
 
-            <h2>
-                월간 음수량
-            </h2>
+            <div class="section-row">
 
-            <p class="empty-text">
-                아직 저장된 월간 음수 기록이 없습니다.
-            </p>
+                <h2>
+                    월간 음수량
+                </h2>
+
+                <span class="type-caption">
+                    이번 달 기록
+                </span>
+
+            </div>
+
+            <div
+                id="monthly-water-chart"
+                class="monthly-water-chart"
+            >
+
+                {% if monthly_data %}
+
+                    {% for day in monthly_data %}
+
+                        <div class="monthly-bar-item">
+
+                            <div class="monthly-bar-value">
+                                {{ day.amount }}ml
+                            </div>
+
+                            <div class="monthly-bar-track">
+
+                                <div
+                                    class="monthly-bar-fill {{ day.color }}"
+                                    style="height: {{ day.height }}%;"
+                                ></div>
+
+                            </div>
+
+                            <div class="monthly-bar-day">
+                                {{ day.day }}일
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <p class="empty-text">
+                        아직 저장된 월간 음수 기록이 없습니다.
+                    </p>
+
+                {% endif %}
+
+            </div>
 
         </section>
 
@@ -937,10 +1046,10 @@
                     (item, index) => {
 
                         const name =
-                            item[0];
+                            item.name;
 
                         const count =
-                            item[1];
+                            item.count;
 
                         let rankClass = "";
                         let medal = "🥉";
@@ -1195,6 +1304,10 @@
                     data.ranking
                 );
 
+                renderMonthlyWater(
+                    data.monthly_data
+                );
+
             } catch (error) {
                 console.error(
                     "대시보드 갱신 실패:",
@@ -1202,6 +1315,59 @@
                 );
             }
         }
+        
+        function renderMonthlyWater(monthlyData) {
+            const chart =
+                document.getElementById(
+                    "monthly-water-chart"
+                );
+
+            if (!chart) {
+                return;
+            }
+
+            chart.innerHTML = "";
+
+            if (
+                !monthlyData
+                || monthlyData.length === 0
+            ) {
+                chart.innerHTML =
+                    '<p class="empty-text">아직 저장된 월간 음수 기록이 없습니다.</p>';
+
+                return;
+            }
+
+            monthlyData.forEach(function(day) {
+                const item =
+                    document.createElement("div");
+
+                item.className =
+                    "monthly-bar-item";
+
+                item.innerHTML = `
+                    <div class="monthly-bar-value">
+                        ${day.amount}ml
+                    </div>
+
+                    <div class="monthly-bar-track">
+                        <div
+                            class="monthly-bar-fill ${day.color}"
+                            style="height: ${day.height}%;">
+                        </div>
+                    </div>
+
+                    <div class="monthly-bar-day">
+                        ${day.day}일
+                    </div>
+                `;
+
+                chart.appendChild(item);
+            });
+        }
+
+
+
 
 
         function connectDashboardEvents() {
@@ -1242,6 +1408,56 @@
                         "실시간 연결 재시도 중..."
                     );
                 };
+        }
+
+        function openFavoriteConsume(drinkName) {
+
+            const box =
+                document.getElementById(
+                    "favorite-consume-box"
+                );
+
+            const name =
+                document.getElementById(
+                    "favorite-consume-name"
+                );
+
+            const drinkInput =
+                document.getElementById(
+                    "favorite-consume-drink"
+                );
+
+            const amountInput =
+                document.getElementById(
+                    "favorite-consumed-amount"
+                );
+
+
+            if (!box || !name || !drinkInput) {
+                return;
+            }
+
+
+            name.textContent =
+                drinkName;
+
+            drinkInput.value =
+                drinkName;
+
+
+            box.style.display =
+                "block";
+
+
+            if (amountInput) {
+                amountInput.focus();
+            }
+
+
+            box.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
         }
 
 

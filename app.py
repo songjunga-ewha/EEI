@@ -1,6 +1,5 @@
 import json
 import queue
-import random
 import re
 import threading
 from datetime import datetime
@@ -23,11 +22,6 @@ app = Flask(__name__)
 app.secret_key = "smart_coaster_demo_secret"
 
 
-# ==========================================
-# 글로벌 데이터 정의 (메모리 저장소)
-# ==========================================
-
-
 saved_user = {
    "name": "사용자",
    "age": "20",
@@ -44,52 +38,103 @@ saved_user = {
 
 saved_drinks = [
    {
+       "name": "물",
+       "total_volume": 500,
+       "total_caffeine": 0,
+       "total_sugar": 0,
+       "total_vitamin": 0,
+   },
+   {
+       "name": "아메리카노",
+       "total_volume": 355,
+       "total_caffeine": 150,
+       "total_sugar": 0,
+       "total_vitamin": 0,
+   },
+   {
+       "name": "라떼",
+       "total_volume": 370,
+       "total_caffeine": 130,
+       "total_sugar": 18,
+       "total_vitamin": 5,
+   },
+   {
        "name": "비타민워터",
        "total_volume": 500,
        "total_caffeine": 0,
        "total_sugar": 18,
        "total_vitamin": 80,
-   }
-]
-
-
-drink_logs = [
-   {
-       "time": "09:20",
-       "drink": "물",
-       "total_volume": 300,
-       "consumed_amount": 200,
-       "caffeine": 0,
-       "sugar": 0,
-       "vitamin": 0,
-       "drink_ratio": 66.67,
-       "source": "로드셀 측정",
-       "status": "정상",
    },
    {
-       "time": "11:10",
-       "drink": "믹스커피",
+       "name": "이온음료",
+       "total_volume": 250,
+       "total_caffeine": 0,
+       "total_sugar": 18,
+       "total_vitamin": 10,
+   },
+   {
+       "name": "믹스커피",
        "total_volume": 100,
-       "consumed_amount": 70,
-       "caffeine": 35,
-       "sugar": 4.2,
-       "vitamin": 0,
-       "drink_ratio": 70.0,
-       "source": "즐겨찾기 버튼 + 로드셀 측정",
-       "status": "비율 계산 반영",
+       "total_caffeine": 35,
+       "total_sugar": 4,
+       "total_vitamin": 0,
    },
 ]
+
+# ✅ 수정 2: 즐겨찾기에서도 사용할 수 있도록 영양정보 표를 전역으로 이동
+DRINK_NUTRITION = {
+
+    # 기존 음료
+    "물": {
+        "total_volume": 500,
+        "total_caffeine": 0,
+        "total_sugar": 0,
+        "total_vitamin": 0,
+    },
+
+    "아메리카노": {
+        "total_volume": 355,
+        "total_caffeine": 150,
+        "total_sugar": 0,
+        "total_vitamin": 0,
+    },
+
+    "라떼": {
+        "total_volume": 370,
+        "total_caffeine": 130,
+        "total_sugar": 18,
+        "total_vitamin": 5,
+    },
+
+    "비타민워터": {
+        "total_volume": 500,
+        "total_caffeine": 0,
+        "total_sugar": 18,
+        "total_vitamin": 80,
+    },
+
+    "이온음료": {
+        "total_volume": 250,
+        "total_caffeine": 0,
+        "total_sugar": 18,
+        "total_vitamin": 10,
+    },
+
+    "믹스커피": {
+        "total_volume": 100,
+        "total_caffeine": 35,
+        "total_sugar": 4,
+        "total_vitamin": 0,
+    },
+
+ }
+
+
+drink_logs = []
 
 
 dashboard_subscribers = []
 dashboard_subscribers_lock = threading.Lock()
-
-
-
-
-# ==========================================
-# 헬퍼 / 유틸리티 함수
-# ==========================================
 
 
 def classify_user_type(diseases):
@@ -360,19 +405,34 @@ def get_drink_type_card(total_water, total_caffeine, total_sugar, total_vitamin)
        }
 
 
-   log_count = len(drink_logs)
-   average_amount = total_water / log_count
+   today = datetime.now().strftime("%Y-%m-%d")
+
+   today_logs = [
+       log for log in drink_logs
+       if log.get("date") == today
+   ]
+
+   log_count = len(today_logs)
+   if log_count > 0:
+       average_amount = total_water / log_count
+   else:
+       average_amount = 0
+
    water_amount = 0
 
-
-   for log in drink_logs:
+   for log in today_logs:
        drink_name = log.get("drink", "")
+
        if "물" in drink_name and "비타민" not in drink_name:
-           water_amount += log.get("consumed_amount", 0)
+           water_amount += safe_float(
+               log.get("consumed_amount", 0)
+           )
 
-
-   water_ratio = calculate_rate(water_amount, total_water) if total_water else 0
-
+   water_ratio = (
+       calculate_rate(water_amount, total_water)
+       if total_water > 0
+       else 0
+   )
 
    if total_caffeine >= 210:
        return {
@@ -415,48 +475,94 @@ def get_drink_type_card(total_water, total_caffeine, total_sugar, total_vitamin)
 
 def get_drink_ranking():
    ranking = {}
+
    for log in drink_logs:
        name = log.get("drink", "이름 없는 음료")
-       ranking[name] = ranking.get(name, 0) + 1
-   return sorted(ranking.items(), key=lambda item: item[1], reverse=True)
 
+       if not name:
+           name = "이름 없는 음료"
+
+       ranking[name] = ranking.get(name, 0) + 1
+
+   sorted_ranking = sorted(
+       ranking.items(),
+       key=lambda item: (-item[1], item[0])
+   )
+
+   result = []
+   current_rank = 0
+   previous_count = None
+
+   for index, (name, count) in enumerate(sorted_ranking, start=1):
+
+       if count != previous_count:
+           current_rank = index
+
+       result.append({
+           "rank": current_rank,
+           "name": name,
+           "count": count,
+       })
+
+       previous_count = count
+
+   return result
 
 
 
 def get_monthly_data(target_water):
-   sample_amounts = [
-       300, 450, 700, 900, 1100, 650, 500, 800, 950, 1200,
-       400, 350, 1000, 1050, 750, 600, 850, 1300, 1150, 500,
-       450, 900, 1000, 780, 620, 300, 1100, 950, 700, 850,
-   ]
+    today = datetime.now()
+    current_year = today.year
+    current_month = today.month
+    current_day = today.day
 
+    daily_amounts = {}
 
-   monthly_data = []
-   for index, amount in enumerate(sample_amounts):
-       day = index + 1
-       rate = calculate_rate(amount, target_water)
+    for log in drink_logs:
+        date_text = log.get("date")
 
+        if not date_text:
+            continue
 
-       if rate < 50:
-           status = "부족"
-       elif rate < 70:
-           status = "주의"
-       else:
-           status = "양호"
+        try:
+            log_date = datetime.strptime(date_text, "%Y-%m-%d")
+        except ValueError:
+            continue
 
+        # 현재 연도와 현재 월의 기록만 사용
+        if (
+            log_date.year == current_year
+            and log_date.month == current_month
+        ):
+            day = log_date.day
+            amount = safe_int(log.get("consumed_amount", 0))
 
-       monthly_data.append({
-           "day": day,
-           "amount": amount,
-           "rate": rate,
-           "height": clamp_rate(rate),
-           "color": get_bar_color(rate),
-           "status": status,
-       })
-   return monthly_data
+            daily_amounts[day] = daily_amounts.get(day, 0) + amount
 
+    monthly_data = []
 
+    # 오늘까지의 날짜만 표시
+    for day in range(1, current_day + 1):
+        amount = daily_amounts.get(day, 0)
+        rate = calculate_rate(amount, target_water)
 
+        if rate < 50:
+            status = "부족"
+        elif rate < 70:
+            status = "주의"
+        else:
+            status = "양호"
+
+        monthly_data.append({
+            "day": day,
+            "amount": amount,
+            "rate": rate,
+            "height": clamp_rate(rate),
+            "color": get_bar_color(rate),
+            "status": status,
+        })
+
+    return monthly_data
 
 def get_reversed_logs_with_index():
    result = []
@@ -501,23 +607,82 @@ def save_user_and_drinks(form):
    drink_vitamins = form.getlist("drink_vitamin")
 
 
-   saved_drinks = []
+   saved_drinks = [
+      {
+          "name": "물",
+          "total_volume": 500,
+          "total_caffeine": 0,
+          "total_sugar": 0,
+          "total_vitamin": 0,
+      },
+      {
+          "name": "아메리카노",
+          "total_volume": 355,
+          "total_caffeine": 150,
+          "total_sugar": 0,
+          "total_vitamin": 0,
+      },
+      {
+          "name": "라떼",
+          "total_volume": 370,
+          "total_caffeine": 130,
+          "total_sugar": 18,
+          "total_vitamin": 5,
+      },
+      {
+          "name": "비타민워터",
+          "total_volume": 500,
+          "total_caffeine": 0,
+          "total_sugar": 18,
+          "total_vitamin": 80,
+      },
+      {
+          "name": "이온음료",
+          "total_volume": 250,
+          "total_caffeine": 0,
+          "total_sugar": 18,
+          "total_vitamin": 10,
+      },
+      {
+          "name": "믹스커피",
+          "total_volume": 100,
+          "total_caffeine": 35,
+          "total_sugar": 4,
+          "total_vitamin": 0,
+      },
+
+
+   ]
+   
+
    for index in range(len(drink_names)):
        drink_name = safe_list_get(drink_names, index, "").strip()
        if drink_name == "":
            continue
+       already_exists = any(
+          drink.get("name") == drink_name
+          for drink in saved_drinks
+       )
 
+       if not already_exists:
+          drink = {
+              "name": drink_name,
+              "total_volume": safe_int(
+                  safe_list_get(drink_amounts, index, 0)
+              ),
+              "total_caffeine": safe_int(
+                  safe_list_get(drink_caffeines, index, 0)
+              ),
+              "total_sugar": safe_int(
+                  safe_list_get(drink_sugars, index, 0)
+              ),
+              "total_vitamin": safe_int(
+                  safe_list_get(drink_vitamins, index, 0)
+              ),
+          }
+          saved_drinks.append(drink)
 
-       drink = {
-           "name": drink_name,
-           "total_volume": safe_int(safe_list_get(drink_amounts, index, 0)),
-           "total_caffeine": safe_int(safe_list_get(drink_caffeines, index, 0)),
-           "total_sugar": safe_int(safe_list_get(drink_sugars, index, 0)),
-           "total_vitamin": safe_int(safe_list_get(drink_vitamins, index, 0)),
-       }
-       saved_drinks.append(drink)
-
-
+ 
    saved_user = {
        "name": name if name else "사용자",
        "age": age if age > 0 else 20,
@@ -549,10 +714,31 @@ def get_dashboard_context():
        "vitamin_goal": 100,
    }
 
-   total_water = sum(log.get("consumed_amount", 0) for log in drink_logs)
-   total_caffeine = round(sum(log.get("caffeine", 0) for log in drink_logs), 2)
-   total_sugar = round(sum(log.get("sugar", 0) for log in drink_logs), 2)
-   total_vitamin = round(sum(log.get("vitamin", 0) for log in drink_logs), 2)
+   today = datetime.now().strftime("%Y-%m-%d")
+
+   total_water = sum(
+       log.get("consumed_amount", 0)
+       for log in drink_logs
+       if log.get("date") == today
+   )
+   
+   total_caffeine = round(sum(
+       log.get("caffeine", 0)
+       for log in drink_logs
+       if log.get("date") == today
+   ), 2)
+   
+   total_sugar = round(sum(
+       log.get("sugar", 0)
+       for log in drink_logs
+       if log.get("date") == today
+   ), 2)
+
+   total_vitamin = round(sum(
+       log.get("vitamin", 0)
+       for log in drink_logs
+       if log.get("date") == today
+   ), 2)
 
    target_water = user_info.get("recommended_water", 2000)
 
@@ -621,13 +807,6 @@ def notify_dashboard_update():
                dashboard_subscribers.remove(subscriber)
 
 
-
-
-# ==========================================
-# 라우팅 영역 (웹 페이지)
-# ==========================================
-
-
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
 def index():
@@ -686,32 +865,9 @@ def logs_page():
 
 
 
-
-# ============================================================
-# 즐겨찾기
-# ============================================================
-
-
 @app.route("/favorite", methods=["GET", "POST"])
 def favorite():
 
-    # --------------------------------------------------------
-    # 로그인/사용자 설정 여부 확인
-    # --------------------------------------------------------
-    #
-    # 현재 프로젝트는 별도의 로그인 시스템이 없기 때문에
-    # session["user"]가 존재하는지를 기준으로 확인한다.
-    # --------------------------------------------------------
-
-    
-
-    # ========================================================
-    # GET
-    # ========================================================
-    #
-    # 즐겨찾기 페이지에 처음 들어왔을 때
-    # 업로드 화면을 보여준다.
-    # ========================================================
 
     if request.method == "GET":
 
@@ -726,22 +882,11 @@ def favorite():
         )
 
 
-    # ========================================================
-    # POST
-    # ========================================================
-    #
-    # favorite.html에서 음료 사진을 업로드하면
-    # 여기로 들어온다.
-    # ========================================================
-
     uploaded_file = request.files.get(
         "drink_image"
     )
 
 
-    # --------------------------------------------------------
-    # 파일이 없는 경우
-    # --------------------------------------------------------
 
     if uploaded_file is None:
 
@@ -757,9 +902,6 @@ def favorite():
         )
 
 
-    # --------------------------------------------------------
-    # 파일 이름이 없는 경우
-    # --------------------------------------------------------
 
     if uploaded_file.filename == "":
 
@@ -775,18 +917,11 @@ def favorite():
         )
 
 
-    # ========================================================
-    # 이미지 색상 분석
-    # ========================================================
-
     analysis_result = analyze_uploaded_file(
         uploaded_file
     )
 
 
-    # --------------------------------------------------------
-    # 분석 실패
-    # --------------------------------------------------------
 
     if not analysis_result.get("ok"):
 
@@ -806,23 +941,6 @@ def favorite():
         )
 
 
-    # ========================================================
-    # 분석 성공
-    # ========================================================
-    #
-    # 이 단계에서는 아직 즐겨찾기에 바로 저장하지 않는다.
-    #
-    # 왜냐하면:
-    #
-    # 갈색
-    # ↓
-    # 커피 / 홍차 / 콜라
-    #
-    # 중에서 사용자가 실제 음료를 선택해야 하기 때문이다.
-    #
-    # 따라서 분석 결과를 favorite.html에 넘겨준다.
-    # ========================================================
-
     favorites = session.get(
         "favorites",
         []
@@ -836,30 +954,11 @@ def favorite():
     )
 
 
-# ============================================================
-# 즐겨찾기 실제 등록
-# ============================================================
-#
-# favorite.html에서 사용자가 후보 음료를 선택하면
-# 이 route가 호출된다.
-# ============================================================
-
-
 @app.route(
     "/favorite/add",
     methods=["POST"]
 )
 def favorite_add():
-
-    # --------------------------------------------------------
-    # 사용자 확인
-    # --------------------------------------------------------
-
-    
-
-    # --------------------------------------------------------
-    # HTML에서 선택한 정보 가져오기
-    # --------------------------------------------------------
 
     drink_name = request.form.get(
         "drink_name",
@@ -871,40 +970,23 @@ def favorite_add():
         ""
     ).strip()
 
-
-    # --------------------------------------------------------
-    # 음료 이름이 없는 경우
-    # --------------------------------------------------------
-
     if not drink_name:
-
         return redirect(
             url_for("favorite")
         )
 
-
-    # ========================================================
-    # 현재 즐겨찾기 가져오기
-    # ========================================================
 
     favorites = session.get(
         "favorites",
         []
     )
 
-
-    # ========================================================
-    # 중복 등록 방지
-    # ========================================================
-
     already_exists = any(
         favorite.get("name") == drink_name
         for favorite in favorites
     )
 
-
     if not already_exists:
-
         favorites.append(
             {
                 "name": drink_name,
@@ -912,28 +994,206 @@ def favorite_add():
             }
         )
 
-
-    # ========================================================
-    # 세션에 다시 저장
-    # ========================================================
-
     session["favorites"] = favorites
-
     session.modified = True
 
 
-    # ========================================================
-    # 즐겨찾기 페이지로 돌아가기
-    # ========================================================
+
+    drink_exists = any(
+        drink.get("name") == drink_name
+        for drink in saved_drinks
+    )
+
+
+    if not drink_exists:
+
+        nutrition = DRINK_NUTRITION.get(
+            drink_name,
+            {
+                "total_volume": 500,
+                "total_caffeine": 0,
+                "total_sugar": 0,
+                "total_vitamin": 0,
+            }
+        )
+
+        new_drink = {
+            "name": drink_name,
+            "total_volume": nutrition["total_volume"],
+            "total_caffeine": nutrition["total_caffeine"],
+            "total_sugar": nutrition["total_sugar"],
+            "total_vitamin": nutrition["total_vitamin"],
+        }
+
+        saved_drinks.append(
+            new_drink
+        )
+
+
 
     return redirect(
         url_for("favorite")
     )
 
 
-# ============================================================
-# 즐겨찾기 삭제
-# ============================================================
+@app.route(
+    "/favorite/consume",
+    methods=["POST"]
+)
+def favorite_consume():
+
+    drink_name = request.form.get(
+        "drink_name",
+        ""
+    ).strip()
+
+
+    consumed_amount = parse_numeric(
+        request.form.get(
+            "consumed_amount",
+            0
+        )
+    )
+
+    if not drink_name or consumed_amount <= 0:
+        return redirect(
+            url_for("dashboard")
+        )
+
+
+    drink = next(
+        (
+            item
+            for item in saved_drinks
+            if item.get("name") == drink_name
+        ),
+        None
+    )
+
+
+    if drink is None:
+
+        print(
+            "즐겨찾기 음료 정보를 찾을 수 없습니다:",
+            drink_name
+        )
+
+        print(
+            "현재 saved_drinks:",
+            saved_drinks
+        )
+
+        return redirect(
+            url_for("dashboard")
+        )
+
+
+    total_volume = safe_float(
+        drink.get(
+            "total_volume",
+            0
+        )
+    )
+
+    if total_volume <= 0:
+
+        return redirect(
+            url_for("dashboard")
+        )
+
+    consumed_amount = min(
+        consumed_amount,
+        total_volume
+    )
+
+
+
+    calculated = calculate_consumed_ingredients(
+
+        total_volume=total_volume,
+
+        consumed_amount=consumed_amount,
+
+        total_caffeine=safe_float(
+            drink.get(
+                "total_caffeine",
+                0
+            )
+        ),
+
+        total_sugar=safe_float(
+            drink.get(
+                "total_sugar",
+                0
+            )
+        ),
+
+        total_vitamin=safe_float(
+            drink.get(
+                "total_vitamin",
+                0
+            )
+        ),
+    )
+
+
+    new_log = {
+
+        "date":
+            datetime.now().strftime(
+                "%Y-%m-%d"
+            ),
+
+        "time":
+            datetime.now().strftime(
+                "%H:%M"
+            ),
+
+        "drink":
+            drink_name,
+
+        "total_volume":
+            round(
+                total_volume,
+                2
+            ),
+
+        "consumed_amount":
+            round(
+                consumed_amount,
+                2
+            ),
+
+        "caffeine":
+            calculated["caffeine"],
+
+        "sugar":
+            calculated["sugar"],
+
+        "vitamin":
+            calculated["vitamin"],
+
+        "drink_ratio":
+            calculated["ratio"],
+
+        "source":
+            "즐겨찾기 음료 수동 기록",
+
+        "status":
+            "정상",
+    }
+
+    drink_logs.append(
+        new_log
+    )
+
+
+    notify_dashboard_update()
+
+    return redirect(
+        url_for("dashboard")
+    )
+
 
 
 @app.route(
@@ -942,25 +1202,13 @@ def favorite_add():
 )
 def favorite_delete(favorite_index):
 
-    # --------------------------------------------------------
-    # 사용자 확인
-    # --------------------------------------------------------
 
-    
-
-    # --------------------------------------------------------
-    # 현재 즐겨찾기 가져오기
-    # --------------------------------------------------------
 
     favorites = session.get(
         "favorites",
         []
     )
 
-
-    # --------------------------------------------------------
-    # 유효한 번호인지 확인
-    # --------------------------------------------------------
 
     if (
         0 <= favorite_index
@@ -972,10 +1220,6 @@ def favorite_delete(favorite_index):
         )
 
 
-    # --------------------------------------------------------
-    # 변경된 즐겨찾기 저장
-    # --------------------------------------------------------
-
     session["favorites"] = favorites
 
     session.modified = True
@@ -987,51 +1231,6 @@ def favorite_delete(favorite_index):
 
 
 
-@app.route("/add_mock_data", methods=["POST"])
-def add_mock_data():
-   mock_drinks = [
-       {"drink": "물", "total_volume": 300, "total_caffeine": 0, "total_sugar": 0, "total_vitamin": 0, "source": "로드셀 Mock", "status": "정상"},
-       {"drink": "아메리카노", "total_volume": 355, "total_caffeine": 150, "total_sugar": 0, "total_vitamin": 0, "source": "OCR Mock + 로드셀 Mock", "status": "카페인 확인"},
-       {"drink": "라떼", "total_volume": 370, "total_caffeine": 130, "total_sugar": 18, "total_vitamin": 5, "source": "OCR Mock + 로드셀 Mock", "status": "당류 확인"},
-       {"drink": "비타민워터", "total_volume": 500, "total_caffeine": 0, "total_sugar": 18, "total_vitamin": 80, "source": "OCR Mock + 로드셀 Mock", "status": "비타민 확인"},
-       {"drink": "이온음료", "total_volume": 250, "total_caffeine": 0, "total_sugar": 18, "total_vitamin": 10, "source": "OCR Mock + 로드셀 Mock", "status": "당류 확인"},
-   ]
-
-
-   selected_drink = random.choice(mock_drinks)
-   total_volume = selected_drink["total_volume"]
-   consumed_ratio = random.uniform(0.2, 0.95)
-   consumed_amount = int(total_volume * consumed_ratio)
-
-
-   calculated = calculate_consumed_ingredients(
-       total_volume,
-       consumed_amount,
-       selected_drink["total_caffeine"],
-       selected_drink["total_sugar"],
-       selected_drink["total_vitamin"],
-   )
-
-
-   mock_log = {
-       "time": datetime.now().strftime("%H:%M"),
-       "drink": selected_drink["drink"],
-       "total_volume": total_volume,
-       "consumed_amount": consumed_amount,
-       "caffeine": calculated["caffeine"],
-       "sugar": calculated["sugar"],
-       "vitamin": calculated["vitamin"],
-       "drink_ratio": calculated["ratio"],
-       "source": selected_drink["source"],
-       "status": selected_drink["status"],
-   }
-
-
-   drink_logs.append(mock_log)
-   notify_dashboard_update()
-
-
-   return redirect(url_for("dashboard"))
 
 
 
@@ -1045,12 +1244,6 @@ def delete_log(log_index):
 
    return redirect(url_for("logs_page"))
 
-
-
-
-# ==========================================
-# API 라우트 영역
-# ==========================================
 
 
 @app.route("/api/add_drink_log", methods=["POST"])
@@ -1092,6 +1285,7 @@ def api_add_drink_log():
 
 
    new_log = {
+       "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
        "time": data.get("time", datetime.now().strftime("%H:%M")),
        "drink": data.get("drink", "인식된 음료"),
        "total_volume": round(total_volume, 2),
@@ -1138,6 +1332,7 @@ def api_dashboard_data():
        "latest_logs": context["reversed_logs"][:3],
        "drink_type": context["drink_type"],
        "ranking": context["ranking"][:3],
+       "monthly_data": context["monthly_data"],
    })
 
 
@@ -1157,33 +1352,61 @@ def api_user_settings():
 
 
 
-
 @app.route("/api/dashboard_events", methods=["GET"])
 def api_dashboard_events():
    subscriber = queue.Queue(maxsize=10)
 
-
    with dashboard_subscribers_lock:
        dashboard_subscribers.append(subscriber)
-
 
    @stream_with_context
    def event_stream():
        try:
            connected_message = {"type": "connected"}
-           yield "data: " + json.dumps(connected_message, ensure_ascii=False) + "\n\n"
 
+           yield (
+               "data: "
+               + json.dumps(
+                   connected_message,
+                   ensure_ascii=False
+               )
+               + "\n\n"
+           )
 
-           try:
-               event = subscriber.get(timeout=5)
-               yield "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
-           except queue.Empty:
-               yield "data: " + json.dumps({"type": "heartbeat"}, ensure_ascii=False) + "\n\n"
+           while True:
+               try:
+                   event = subscriber.get(timeout=20)
+
+                   yield (
+                       "data: "
+                       + json.dumps(
+                           event,
+                           ensure_ascii=False
+                       )
+                       + "\n\n"
+                   )
+
+               except queue.Empty:
+                   heartbeat = {
+                       "type": "heartbeat"
+                   }
+
+                   yield (
+                       "data: "
+                       + json.dumps(
+                           heartbeat,
+                           ensure_ascii=False
+                       )
+                       + "\n\n"
+                   )
+
+       except GeneratorExit:
+           pass
+
        finally:
            with dashboard_subscribers_lock:
                if subscriber in dashboard_subscribers:
                    dashboard_subscribers.remove(subscriber)
-
 
    return Response(
        event_stream(),
@@ -1194,8 +1417,6 @@ def api_dashboard_events():
            "Connection": "keep-alive",
        },
    )
-
-
   
 
 if __name__ == "__main__":

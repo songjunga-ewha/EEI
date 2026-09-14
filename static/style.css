@@ -1507,3 +1507,141 @@ input[type="number"] {
 
     font-size: 14px;
 }
+
+/* ==========================================
+   월간 음수량 막대그래프
+   ========================================== */
+
+.monthly-water-card {
+    overflow: hidden;
+}
+
+.monthly-water-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    width: 100%;
+    height: 240px;
+    margin-top: 20px;
+    padding: 20px 4px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.monthly-bar-item {
+    flex: 0 0 38px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    position: relative;
+}
+
+.monthly-bar-value {
+    width: 100%;
+    min-height: 18px;
+    margin-bottom: 6px;
+    font-size: 10px;
+    color: #555;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.monthly-bar-track {
+    width: 24px;
+    height: 160px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: #f0f3f8;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.monthly-bar-fill {
+    width: 100%;
+    min-height: 0;
+    border-radius: 12px;
+    transition: height 0.3s ease;
+}
+
+/* 달성률에 따른 막대 색상 */
+
+.monthly-bar-fill.red {
+    background: #ff6b6b;
+}
+
+.monthly-bar-fill.yellow {
+    background: #ffd43b;
+}
+
+.monthly-bar-fill.green {
+    background: #51cf66;
+}
+
+.monthly-bar-day {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #777;
+    white-space: nowrap;
+}
+
+.favorite-consume-box {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f8fbff;
+    border-radius: 16px;
+    border: 1px solid #dfe9f7;
+}
+
+.favorite-consume-title {
+    margin-bottom: 14px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.favorite-consume-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.favorite-consume-form label {
+    font-size: 13px;
+    color: #666;
+}
+
+.favorite-consume-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.favorite-consume-input-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 1px solid #d5deeb;
+    border-radius: 10px;
+    font-size: 15px;
+    background: white;
+}
+
+.favorite-consume-input-row span {
+    font-size: 14px;
+    color: #666;
+}
+
+.favorite-consume-button {
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: #4f8cff;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
